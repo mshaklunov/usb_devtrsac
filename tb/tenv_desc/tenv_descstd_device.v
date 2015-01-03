@@ -1,0 +1,105 @@
+
+module tenv_descstd_device();
+
+  //IFACE
+  reg[7:0]      bNumConfigurations=8'h00;
+  reg[7:0]      iSerialNumber=8'h00;
+  reg[7:0]      iProduct=8'h00;
+  reg[7:0]      iManufacturer=8'h00;
+  reg[15:0]     bcdDevice=16'h0000;
+  reg[15:0]     idProduct=16'h0000;
+  reg[15:0]     idVendor=16'h0000;
+  reg[7:0]      bMaxPacketSize0=8'h08;
+  reg[7:0]      bDeviceProtocol=8'hFF;
+  reg[7:0]      bDeviceSubClass=8'hFF;
+  reg[7:0]      bDeviceClass=8'hFF;
+  reg[15:0]     bcdUSB=16'h0110;
+  reg[7:0]      bDescriptorType=8'h01;
+  reg[7:0]      bLength=8'd18;
+  reg[143:0]    data_bybit;
+  reg[7:0]      data_bybyte[17:0];
+  //LOCAL
+  integer       i;
+
+  always @*
+    begin
+    i=0;
+    repeat(8)
+      begin
+      data_bybit[i]=bLength[i%8];
+      i=i+1;
+      end
+    repeat(8)
+      begin
+      data_bybit[i]=bDescriptorType[i%8];
+      i=i+1;
+      end
+    repeat(16)
+      begin
+      data_bybit[i]=bcdUSB[i%16];
+      i=i+1;
+      end
+    repeat(8)
+      begin
+      data_bybit[i]=bDeviceClass[i%8];
+      i=i+1;
+      end
+    repeat(8)
+      begin
+      data_bybit[i]=bDeviceSubClass[i%8];
+      i=i+1;
+      end
+    repeat(8)
+      begin
+      data_bybit[i]=bDeviceProtocol[i%8];
+      i=i+1;
+      end
+    repeat(8)
+      begin
+      data_bybit[i]=bMaxPacketSize0[i%8];
+      i=i+1;
+      end
+    repeat(16)
+      begin
+      data_bybit[i]=idVendor[i%16];
+      i=i+1;
+      end
+    repeat(16)
+      begin
+      data_bybit[i]=idProduct[i%16];
+      i=i+1;
+      end
+    repeat(16)
+      begin
+      data_bybit[i]=bcdDevice[i%16];
+      i=i+1;
+      end
+    repeat(8)
+      begin
+      data_bybit[i]=iManufacturer[i%8];
+      i=i+1;
+      end
+    repeat(8)
+      begin
+      data_bybit[i]=iProduct[i%8];
+      i=i+1;
+      end
+    repeat(8)
+      begin
+      data_bybit[i]=iSerialNumber[i%8];
+      i=i+1;
+      end
+    repeat(8)
+      begin
+      data_bybit[i]=bNumConfigurations[i%8];
+      i=i+1;
+      end
+    
+    i=0;
+    while(i<144)
+      begin
+      data_bybyte[i/8][i%8]=data_bybit[i];
+      i= i+1;
+      end
+    end
+endmodule
