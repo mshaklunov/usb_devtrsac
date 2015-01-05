@@ -9,7 +9,9 @@ task tcase_configured;
   $write("%0t [%0s]: ",$realtime,block_name);
   $display("Configured state.");  
 
-  //SET CONFIGURATION
+  //#1 SET CONFIGURATION
+  $write("%0t [%0s]: ",$realtime,block_name);
+  $display("# Set USB device configuration.");
   i=$dist_uniform(seed,1,255);
   fork
     begin
@@ -33,7 +35,9 @@ task tcase_configured;
     $finish;
     end
 
-  //EP0 SHOULD REPLY AT GET DESCRIPTOR
+  //#2 EP0 SHOULD REPLY AT GET DESCRIPTOR
+  $write("%0t [%0s]: ",$realtime,block_name);
+  $display("# Ep0 is available.");
   fork
     begin//HOST
     `tenv_usbhost.reqstd_getdesc.type=`tenv_usbhost.reqstd_getdesc.DEVICE;
@@ -54,29 +58,54 @@ task tcase_configured;
     end
   join
 
-  //CHECKING THAT EP1-15 IS AVAILABLE
-  i=1;
+  //#3 CHECKING THAT EP1-15 IS AVAILABLE
+  $write("%0t [%0s]: ",$realtime,block_name);
+  $display("# Ep15-1 is available.");
+  @(posedge `tenv_clock.x4);
+  `tenv_usbdev.ep_enable=15'b000_0000_0000_0001;
   repeat(15)
-    fork
-    begin//HOST
-    `tenv_usbhost.trfer_bulk_in.ep=i;
-    `tenv_usbhost.trfer_bulk_in.data_size=1;
-    `tenv_usbhost.trfer_bulk_in.packet_size=1;
-    `tenv_usbhost.trfer_bulk_in;
-    `tenv_usbhost.check_data(0,1);
-    i=i+1;
-    end
+    begin
+    i=1;
+    repeat(15)
+      fork
     
-    begin//DEVICE
-    `tenv_usbdev.gen_data(0,1);
-    `tenv_usbdev.trfer_in.ep=i;
-    `tenv_usbdev.trfer_in.data_size=1;
-    `tenv_usbdev.trfer_in.packet_size=1;
-    `tenv_usbdev.trfer_in;
-    end
-    join
+      begin//DEVICE
+      if(`tenv_usbdev.ep_enable[i]==1)
+        begin
+        `tenv_usbdev.trsac_out.ep=i;
+        `tenv_usbdev.trsac_out.data_size=1;
+        `tenv_usbdev.trsac_out.buffer_ptr=0;
+        `tenv_usbdev.trsac_out.handshake=`tenv_usbdev.ACK;
+        `tenv_usbdev.trsac_out;
+        `tenv_usbdev.check_data(0,1);
+        end
+      else
+        `tenv_usbdev.mntr_trsac_off;
+      end
       
-  //FROM CONFIGURED TO ADDRESSED WITH SetConfiguration(0)
+      begin//HOST
+      `tenv_usbhost.gen_data(0,1);
+      `tenv_usbhost.trsac_out.ep=i;
+      `tenv_usbhost.trsac_out.data_size=1;
+      `tenv_usbhost.trsac_out.buffer_ptr=0;
+      `tenv_usbhost.trsac_out.handshake= !`tenv_usbdev.ep_enable[i] ? 
+                                         `tenv_usbhost.NOREPLY : 
+                                         `tenv_usbhost.ACK;
+      `tenv_usbhost.trsac_out;
+      if(`tenv_usbdev.ep_enable[i]==0)
+        disable `tenv_usbdev.mntr_trsac_off;
+      i=i+1;
+      end
+   
+      join
+    @(posedge `tenv_clock.x4);  
+    `tenv_usbdev.ep_enable=`tenv_usbdev.ep_enable<<1;
+    end
+  `tenv_usbdev.ep_enable=15'b111_1111_1111_1111;
+  
+  //#4 FROM CONFIGURED TO ADDRESSED WITH SetConfiguration(0)
+  $write("%0t [%0s]: ",$realtime,block_name);
+  $display("# Go to ADDRESSED with SetConfiguration(0).");
   fork
     begin
     `tenv_usbhost.reqstd_setconf.conf_value=0;
@@ -123,7 +152,9 @@ task tcase_configured;
     $finish;
     end
     
-  //FROM CONFIGURED TO DEFAULT WITH USB RESET
+  //#5 FROM CONFIGURED TO DEFAULT WITH USB RESET
+  $write("%0t [%0s]: ",$realtime,block_name);
+  $display("# Go to DEFAULT with USB reset.");  
   `tenv_usb_encoder.mode=`tenv_usb_encoder.USB_RESET;
   `tenv_usb_encoder.start=1;
   wait(`tenv_usb_encoder.start==0);

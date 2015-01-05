@@ -34,10 +34,14 @@ module tenv_usbdev;
   reg           speed=0;
   reg           device_wakeup=0;
   wire[2:0]     device_state;
-  parameter     POWERED=0,
-                DEFAULT=1,
-                ADDRESSED=2,
-                CONFIGURED=3;
+  parameter     POWERED=3'd0,
+                DEFAULT=3'd1,
+                ADDRESSED=3'd2,
+                CONFIGURED=3'd3,
+                SPND_PWR=3'd4,
+                SPND_DFT=3'd5,
+                SPND_ADDR=3'd6,
+                SPND_CONF=3'd7;
   wire          sof_tick;
   wire[10:0]    sof_value;
       
@@ -65,6 +69,7 @@ module tenv_usbdev;
     
   //TASKS
   `include "tenv_usbdev/tenv_usbdev.mntr_trsac_off.v"
+  `include "tenv_usbdev/tenv_usbdev.mntr_devstate.v"
   `include "tenv_usbdev/tenv_usbdev.reset.v"
   `include "tenv_usbdev/tenv_usbdev.gen_data.v"
   `include "tenv_usbdev/tenv_usbdev.check_data.v"

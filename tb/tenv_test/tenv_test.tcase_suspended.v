@@ -9,9 +9,9 @@ task tcase_suspended;
   $write("%0t [%0s]: ",$realtime,block_name);
   $display("Suspended state.");
   
-  //POWERED
+  //#1 POWERED
   $write("%0t [%0s]: ",$realtime,block_name);  
-  $display("POWERED TO SUSPENDED.");
+  $display("# POWERED TO SUSPENDED.");
   
   //RESET DEVICE
   `tenv_usbdev.reset(~`tenv_usbdev.speed);
@@ -40,7 +40,7 @@ task tcase_suspended;
     $finish;
     end
   join
-  if(`tenv_usbdev.device_state[2]!=1'b1)
+  if(`tenv_usbdev.device_state!=`tenv_usbdev.SPND_PWR)
     begin
     $write("\n");
     $write("%0t [%0s]: ",$realtime,block_name);
@@ -57,9 +57,9 @@ task tcase_suspended;
     $finish;
     end
   
-  //DEFAULT
+  //#2 DEFAULT
   $write("%0t [%0s]: ",$realtime,block_name);  
-  $display("DEFAULT TO SUSPENDED.");
+  $display("# DEFAULT TO SUSPENDED.");
   `tenv_usb_encoder.mode=`tenv_usb_encoder.USB_RESET;
   `tenv_usb_encoder.start=1;
   `tenv_usbhost.dev_addr=0;
@@ -88,7 +88,7 @@ task tcase_suspended;
     $finish;
     end
   join  
-  if(`tenv_usbdev.device_state[2]!=1'b1)
+  if(`tenv_usbdev.device_state!=`tenv_usbdev.SPND_DFT)
     begin
     $write("\n");
     $write("%0t [%0s]: ",$realtime,block_name);
@@ -105,9 +105,9 @@ task tcase_suspended;
     $finish;
     end
     
-  //ADDRESSED
+  //#3 ADDRESSED
   $write("%0t [%0s]: ",$realtime,block_name);  
-  $display("ADDRESSED TO SUSPENDED.");
+  $display("# ADDRESSED TO SUSPENDED.");
   `tenv_usbhost.reqstd_setaddr.dev_addr_new=$dist_uniform(seed,1,127);
   `tenv_usbhost.reqstd_setaddr;
   repeat(10) @(posedge `tenv_clock.x4);  
@@ -135,7 +135,7 @@ task tcase_suspended;
     $finish;
     end
   join
-  if(`tenv_usbdev.device_state[2]!=1'b1)
+  if(`tenv_usbdev.device_state!=`tenv_usbdev.SPND_ADDR)
     begin
     $write("\n");
     $write("%0t [%0s]: ",$realtime,block_name);
@@ -152,9 +152,9 @@ task tcase_suspended;
     $finish;
     end
     
-  //CONFIGURATED
+  //#4 CONFIGURATED
   $write("%0t [%0s]: ",$realtime,block_name);  
-  $display("CONFIGURED TO SUSPENDED.");
+  $display("# CONFIGURED TO SUSPENDED.");
   i=$dist_uniform(seed,1,255);
   fork
     begin
@@ -194,7 +194,7 @@ task tcase_suspended;
     $finish;
     end
   join    
-  if(`tenv_usbdev.device_state[2]!=1'b1)
+  if(`tenv_usbdev.device_state!=`tenv_usbdev.SPND_CONF)
     begin
     $write("\n");
     $write("%0t [%0s]: ",$realtime,block_name);
@@ -202,9 +202,9 @@ task tcase_suspended;
     $finish;
     end
     
-  //REMOTE WAKEUP
+  //#5 REMOTE WAKEUP
   $write("%0t [%0s]: ",$realtime,block_name);
-  $display("REMOTE WAKEUP.");
+  $display("# REMOTE WAKEUP.");
   `tenv_usbdev.device_wakeup=1;
   @(posedge `tenv_clock.x4);
   `tenv_usbdev.device_wakeup=0;
@@ -212,7 +212,7 @@ task tcase_suspended;
   `tenv_usb_decoder.start=1'b1;
   wait(`tenv_usb_decoder.start==1'b0);
   `tenv_usb_decoder.mode=`tenv_usb_decoder.MODE_PACKET;
-  if(`tenv_usbdev.device_state[2]!=1'b1)
+  if(`tenv_usbdev.device_state!=`tenv_usbdev.SPND_CONF)
       begin
       $write("\n");
       $write("%0t [%0s]: ",$realtime,block_name);

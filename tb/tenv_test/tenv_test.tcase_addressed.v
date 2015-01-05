@@ -8,28 +8,17 @@ task tcase_addressed;
   $write("\n");
   $write("%0t [%0s]: ",$realtime,block_name);
   $display("Addressed state.");
-  //SET ADDRESS
-  fork:fork0
+  //#1 SET ADDRESS
+  $write("%0t [%0s]: ",$realtime,block_name);
+  $display("# Set USB device address.");
+  fork
     begin
     `tenv_usbhost.reqstd_setaddr.dev_addr_new=$dist_uniform(seed,1,127);
     `tenv_usbhost.reqstd_setaddr;
-    disable fork0;
+    disable `tenv_usbdev.mntr_trsac_off;
     end
 
-    begin//CHECK TRANSACTION INTERFACE
-    if(`tenv_usbdev.trsac_req==`tenv_usbdev.REQ_ACTIVE)
-      begin
-      $write("\n");
-      $write("%0t [%0s]: ",$realtime,block_name);
-      $display("Error - invalid trsac_req.");
-      $finish;
-      end
-    @(`tenv_usbdev.trsac_req);
-    $write("\n");
-    $write("%0t [%0s]: ",$realtime,block_name);
-    $display("Error - trsac_req is active.");
-    $finish;
-    end
+    `tenv_usbdev.mntr_trsac_off;
   join
   if(`tenv_usbdev.device_state!=`tenv_usbdev.ADDRESSED)
     begin
@@ -39,7 +28,9 @@ task tcase_addressed;
     $finish;
     end  
   
-  //NEW ADDR, EP0 SHOULD REPLY AT GET DESCRIPTOR
+  //#2 NEW ADDR, EP0 SHOULD REPLY AT GET DESCRIPTOR
+  $write("%0t [%0s]: ",$realtime,block_name);
+  $display("# Ep0 is available at the new address.");
   fork
     begin//HOST
     `tenv_usbhost.reqstd_getdesc.type=`tenv_usbhost.reqstd_getdesc.DEVICE;
@@ -60,10 +51,12 @@ task tcase_addressed;
     end
   join
 
-  //NEW ADDR, CHECKING THAT EP15-1 ARE UNAVAILABLE
+  //#3 NEW ADDR, CHECKING THAT EP15-1 ARE UNAVAILABLE
+  $write("%0t [%0s]: ",$realtime,block_name);
+  $display("# Ep15-1 is unavailable at the new address.");
   i=1;
   repeat(15)
-    fork:fork1
+    fork
     
     begin//HOST
     `tenv_usbhost.gen_data(0,1);
@@ -73,43 +66,19 @@ task tcase_addressed;
     `tenv_usbhost.trsac_out.handshake=`tenv_usbhost.NOREPLY;
     `tenv_usbhost.trsac_out;
     i=i+1;
-    disable fork1;
+    disable `tenv_usbdev.mntr_devstate;
+    disable `tenv_usbdev.mntr_trsac_off;
     end
     
-    begin//CHECK DEVICE STATE
-    if(`tenv_usbdev.device_state!=`tenv_usbdev.ADDRESSED)
-      begin
-      $write("\n");
-      $write("%0t [%0s]: ",$realtime,block_name);
-      $display("Error - invalid device_state. Code1.");
-      $finish;
-      end
-    @(`tenv_usbdev.device_state);
-    $write("\n");
-    $write("%0t [%0s]: ",$realtime,block_name);
-    $display("Error - device_state is active.");
-    $finish;
-    end
-    
-    begin//CHECK TRANSACTION INTERFACE
-    if(`tenv_usbdev.trsac_req==`tenv_usbdev.REQ_ACTIVE)
-      begin
-      $write("\n");
-      $write("%0t [%0s]: ",$realtime,block_name);
-      $display("Error - invalid trsac_req.");
-      $finish;
-      end
-    @(`tenv_usbdev.trsac_req);
-    $write("\n");
-    $write("%0t [%0s]: ",$realtime,block_name);
-    $display("Error - trsac_req is active.");
-    $finish;
-    end  
+    `tenv_usbdev.mntr_devstate(`tenv_usbdev.ADDRESSED);
+    `tenv_usbdev.mntr_trsac_off;
     join
   
-  //CHECKING THAT EP0 IS UNAVAILABLE AT OLD ADDRESS
+  //#4 CHECKING THAT EP0 IS UNAVAILABLE AT OLD ADDRESS
+  $write("%0t [%0s]: ",$realtime,block_name);
+  $display("# Ep0 is unavailable at the old address.");
   `tenv_usbhost.dev_addr=0;
-  fork:fork2
+  fork
     begin//HOST
     `tenv_usbhost.reqstd_getdesc.type=`tenv_usbhost.reqstd_getdesc.DEVICE;
     `tenv_usbhost.reqstd_getdesc.index=0;
@@ -118,74 +87,37 @@ task tcase_addressed;
     `tenv_usbhost.reqstd_getdesc.packet_size=`tenv_usbdev.speed?64:8;
     `tenv_usbhost.reqstd_getdesc.status=`tenv_usbhost.NOREPLY;
     `tenv_usbhost.reqstd_getdesc;
-    disable fork2;
+    disable `tenv_usbdev.mntr_devstate;
+    disable `tenv_usbdev.mntr_trsac_off;
     end
     
-    begin//CHECK DEVICE STATE
-    if(`tenv_usbdev.device_state!=`tenv_usbdev.ADDRESSED)
-      begin
-      $write("\n");
-      $write("%0t [%0s]: ",$realtime,block_name);
-      $display("Error - invalid device_state. Code2.");
-      $finish;
-      end
-    @(`tenv_usbdev.device_state);
-    $write("\n");
-    $write("%0t [%0s]: ",$realtime,block_name);
-    $display("Error - device_state is active.");
-    $finish;
-    end
-    
-    begin//CHECK TRANSACTION INTERFACE
-    if(`tenv_usbdev.trsac_req==`tenv_usbdev.REQ_ACTIVE)
-      begin
-      $write("\n");
-      $write("%0t [%0s]: ",$realtime,block_name);
-      $display("Error - invalid trsac_req.");
-      $finish;
-      end
-    @(`tenv_usbdev.trsac_req);
-    $write("\n");
-    $write("%0t [%0s]: ",$realtime,block_name);
-    $display("Error - trsac_req is active.");
-    $finish;
-    end
+    `tenv_usbdev.mntr_devstate(`tenv_usbdev.ADDRESSED);
+    `tenv_usbdev.mntr_trsac_off;
   join
   `tenv_usbhost.dev_addr=`tenv_usbhost.reqstd_setaddr.dev_addr_new;
     
-  //FROM ADDRESSED TO DEFAULT WITH SetAddress(0)
+  //#5 FROM ADDRESSED TO DEFAULT WITH SetAddress(0)
+  $write("%0t [%0s]: ",$realtime,block_name);
+  $display("# Go to DEFAULT with SetAddress(0).");
   `tenv_usbhost.reqstd_setaddr.dev_addr_new=0;
   `tenv_usbhost.reqstd_setaddr;
   if(`tenv_usbdev.device_state!=`tenv_usbdev.DEFAULT)
     begin
     $write("\n");
     $write("%0t [%0s]: ",$realtime,block_name);
-    $display("Error - invalid device_state. Code3.");
+    $display("Error - invalid device_state");
     $finish;
     end
   
   //BACK TO ADDRESSED
-  fork:fork3
+  fork
     begin
     `tenv_usbhost.reqstd_setaddr.dev_addr_new=$dist_uniform(seed,1,127);
     `tenv_usbhost.reqstd_setaddr;
-    disable fork3;
+    disable `tenv_usbdev.mntr_trsac_off;
     end
-    
-    begin//CHECK TRANSACTION INTERFACE
-    if(`tenv_usbdev.trsac_req==`tenv_usbdev.REQ_ACTIVE)
-      begin
-      $write("\n");
-      $write("%0t [%0s]: ",$realtime,block_name);
-      $display("Error - invalid trsac_req.");
-      $finish;
-      end
-    @(`tenv_usbdev.trsac_req);
-    $write("\n");
-    $write("%0t [%0s]: ",$realtime,block_name);
-    $display("Error - trsac_req is active.");
-    $finish;
-    end
+
+    `tenv_usbdev.mntr_trsac_off;
   join
   if(`tenv_usbdev.device_state!=`tenv_usbdev.ADDRESSED)
     begin
@@ -195,7 +127,9 @@ task tcase_addressed;
     $finish;
     end
     
-  //FROM ADDRESSED TO DEFAULT WITH USB RESET
+  //#6 FROM ADDRESSED TO DEFAULT WITH USB RESET
+  $write("%0t [%0s]: ",$realtime,block_name);
+  $display("# Go to DEFAULT with USB reset.");
   `tenv_usb_encoder.mode=`tenv_usb_encoder.USB_RESET;
   `tenv_usb_encoder.start=1;
   wait(`tenv_usb_encoder.start==0);
@@ -204,33 +138,20 @@ task tcase_addressed;
     begin
     $write("\n");
     $write("%0t [%0s]: ",$realtime,block_name);
-    $display("Error - invalid device_state. Code5.");
+    $display("Error - invalid device_state.");
     $finish;
     end
   `tenv_usbhost.dev_addr=0;  
 
   //BACK TO ADDRESSED
-  fork:fork4
+  fork
     begin
     `tenv_usbhost.reqstd_setaddr.dev_addr_new=$dist_uniform(seed,1,127);
     `tenv_usbhost.reqstd_setaddr;
-    disable fork4;
+    disable `tenv_usbdev.mntr_trsac_off;
     end
-    
-    begin//CHECK TRANSACTION INTERFACE
-    if(`tenv_usbdev.trsac_req==`tenv_usbdev.REQ_ACTIVE)
-      begin
-      $write("\n");
-      $write("%0t [%0s]: ",$realtime,block_name);
-      $display("Error - invalid trsac_req.");
-      $finish;
-      end
-    @(`tenv_usbdev.trsac_req);
-    $write("\n");
-    $write("%0t [%0s]: ",$realtime,block_name);
-    $display("Error - trsac_req is active.");
-    $finish;
-    end
+
+    `tenv_usbdev.mntr_trsac_off;
   join
   if(`tenv_usbdev.device_state!=`tenv_usbdev.ADDRESSED)
     begin

@@ -24,7 +24,7 @@ task tcase_trfer_control;
     fork
     begin
     $write("%0t [%0s]: ",$realtime,block_name);
-    $display("ControlIn(ep=%0d) with interleaved TransactionIn(ep=%0d)",
+    $display("# ControlIn(ep=%0d) with interleaved TransactionIn(ep=%0d)",
             ep,ep_intlvd);
     
     //SETUP STAGE
@@ -196,8 +196,8 @@ task tcase_trfer_control;
     fork
     begin
     $write("%0t [%0s]: ",$realtime,block_name);
-    $display("ControlIn(ep=%0d) with interleaved TransactionOut(ep=%0d)",
-            ep,ep_intlvd);
+    $display("# ControlIn(ep=%0d) with interleaved TransactionOut(ep=%0d)"
+            ,ep,ep_intlvd);
     
     //SETUP STAGE
     `tenv_usbhost.toggle_bit[ep]=0;
@@ -367,7 +367,7 @@ task tcase_trfer_control;
     fork
     begin
     $write("%0t [%0s]: ",$realtime,block_name);
-    $display("ControlIn(ep=%0d) iterrupted by other Control",ep);  
+    $display("# ControlIn(ep=%0d) iterrupted by other Control",ep);  
     //SETUP STAGE
     `tenv_usbhost.toggle_bit[ep]=0;
     `tenv_usbhost.gen_data(i,8);
@@ -557,7 +557,7 @@ task tcase_trfer_control;
     fork
     begin
     $write("%0t [%0s]: ",$realtime,block_name);
-    $display("ControlIn(ep=%0d) with multiple Status Stages",
+    $display("# ControlIn(ep=%0d) with multiple Status Stages",
             ep);
     
     //SETUP STAGE
@@ -670,8 +670,8 @@ task tcase_trfer_control;
     fork
     begin
     $write("%0t [%0s]: ",$realtime,block_name);
-    $display("ControlOut(ep=%0d) with interleaved TransactionIn(ep=%0d)",
-          ep,ep_intlvd);
+    $display("# ControlOut(ep=%0d) with interleaved TransactionIn(ep=%0d)"
+          ,ep,ep_intlvd);
     //SETUP STAGE
     `tenv_usbhost.toggle_bit[ep]=0;
     `tenv_usbhost.gen_data(i,8);
@@ -828,7 +828,8 @@ task tcase_trfer_control;
     fork
     begin
     $write("%0t [%0s]: ",$realtime,block_name);
-    $display("ControlOut(ep=%0d) with interleaved TransactionOut(ep=%0d)",
+    $display("# ControlOut(ep=%0d) with interleaved \
+          TransactionOut(ep=%0d)",
           ep,ep_intlvd);
     //SETUP STAGE
     `tenv_usbhost.toggle_bit[ep]=0;
@@ -985,7 +986,7 @@ task tcase_trfer_control;
     fork
     begin
     $write("%0t [%0s]: ",$realtime,block_name);
-    $display("ControlOut(ep=%0d) interrupted by other Control",ep);
+    $display("# ControlOut(ep=%0d) interrupted by other Control",ep);
     //SETUP STAGE
     `tenv_usbhost.toggle_bit[ep]=0;
     `tenv_usbhost.gen_data(i,8);
@@ -1137,7 +1138,8 @@ task tcase_trfer_control;
     fork
     begin
     $write("%0t [%0s]: ",$realtime,block_name);
-    $display("ControlOut(ep=%0d) with no data, multiple Status Stage",ep);
+    $display("# ControlOut(ep=%0d) with no data, multiple Status Stage",
+            ep);
     //SETUP STAGE
     `tenv_usbhost.toggle_bit[ep]=0;
     `tenv_usbhost.gen_data(i,8);

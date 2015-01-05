@@ -13,7 +13,8 @@ module tenv_usb_encoder;
   real                bit_time=10;
   reg signed[31:0]    jitter=0;
   reg signed[31:0]    jitter_sync1=0;
-  reg signed[31:0]    jitter_sync2=0;  
+  reg signed[31:0]    jitter_sync2=0;
+  reg signed[31:0]    jitter_lastbit=0;
   reg                 sync_corrupt=0;
   reg[7:0]            err_pid=0;
   reg[15:0]           err_crc=0;
@@ -175,8 +176,10 @@ module tenv_usb_encoder;
             count_ones=0;
           j= j-1;
           end
-         
-        if(dplus!=dplus_prev)
+          
+        if(dplus!=dplus_prev & j==-1 & count_ones!==6)
+          #(bit_time+jitter_lastbit);        
+        else if(dplus!=dplus_prev)
           #(bit_time+jitter);
         else
           #bit_time;

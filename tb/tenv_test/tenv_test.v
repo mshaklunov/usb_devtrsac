@@ -72,7 +72,7 @@ module tenv_test;
       `tenv_usb_decoder.speed=`tenv_usbdev.speed;
       `tenv_usbdev.ep_enable=15'h7FFF;//ENABLE ALL EP
       `tenv_usbdev.ep_isoch=15'd000_0000_0000_0000;
-      `tenv_usbdev.ep_intnoretry=15'b000_0000_0000_0000;      
+      `tenv_usbdev.ep_intnoretry=15'b000_0000_0000_0000;
       
       //TESTCASES
       tcase_powered;
@@ -118,7 +118,7 @@ module tenv_test;
       tcase_suspended;
       tcase_trfer_bulkint;
       tcase_trfer_control;
-      tcase_bitstream;      
+      tcase_bitstream;
       tcase_reply_delay;
       
       $write("\n");
@@ -129,9 +129,9 @@ module tenv_test;
       end//TEST_SEQUENCE
 
       begin:TIMEBOMB
-      repeat(150) #(1000*1000);//100 ms
-      $write  ("\n");    
-      $write  ("%0t [%0s]: ",$realtime,block_name);    
+      repeat(300) #(1000*1000);//100 ms
+      $write  ("\n");
+      $write  ("%0t [%0s]: ",$realtime,block_name);
       $display("Error - test time is run out.");
       disable TEST_SEQUENCE;
       end//TIMEBOMB

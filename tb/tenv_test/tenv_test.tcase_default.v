@@ -9,7 +9,9 @@ task tcase_default;
   $write("%0t [%0s]: ",$realtime,block_name);
   $display("Default state.");
   
-  //USB RESET
+  //#1 USB RESET
+  $write("%0t [%0s]: ",$realtime,block_name);
+  $display("# USB reset.");
   `tenv_usb_encoder.mode=`tenv_usb_encoder.USB_RESET;
   `tenv_usb_encoder.start=1;
   wait(`tenv_usb_encoder.start==0);
@@ -22,7 +24,9 @@ task tcase_default;
     $finish;
     end
   
-  //EP0 SHOULD REPLY AT GET DESCRIPTOR
+  //#2 EP0 SHOULD REPLY AT GET DESCRIPTOR
+  $write("%0t [%0s]: ",$realtime,block_name);
+  $display("# Ep0 is available.");  
   fork
     begin//HOST
     `tenv_usbhost.reqstd_getdesc.type=`tenv_usbhost.reqstd_getdesc.DEVICE;
@@ -43,10 +47,12 @@ task tcase_default;
     end 
   join
 
-  //CHECKING THAT EP15-1 ARE UNAVAILABLE
+  //#3 CHECKING THAT EP15-1 ARE UNAVAILABLE
+  $write("%0t [%0s]: ",$realtime,block_name);
+  $display("# Ep15-1 is unavailable.");
   i=1;
   repeat(15)
-    fork:fork2
+    fork
     
     begin//HOST
     `tenv_usbhost.gen_data(0,1);
@@ -56,38 +62,13 @@ task tcase_default;
     `tenv_usbhost.trsac_out.handshake=`tenv_usbhost.NOREPLY;
     `tenv_usbhost.trsac_out;
     i=i+1;
-    disable fork2;
+    disable `tenv_usbdev.mntr_devstate;
+    disable `tenv_usbdev.mntr_trsac_off;
     end
     
-    begin//CHECK DEVICE STATE
-    if(`tenv_usbdev.device_state!=`tenv_usbdev.DEFAULT)
-      begin
-      $write("\n");
-      $write("%0t [%0s]: ",$realtime,block_name);
-      $display("Error - invalid device_state.");
-      $finish;
-      end
-    @(`tenv_usbdev.device_state);
-    $write("\n");
-    $write("%0t [%0s]: ",$realtime,block_name);
-    $display("Error - device_state is active.");
-    $finish;
-    end
-    
-    begin//CHECK TRANSACTION INTERFACE
-    if(`tenv_usbdev.trsac_req==`tenv_usbdev.REQ_ACTIVE)
-      begin
-      $write("\n");
-      $write("%0t [%0s]: ",$realtime,block_name);
-      $display("Error - invalid trsac_req.");
-      $finish;
-      end
-    @(`tenv_usbdev.trsac_req);
-    $write("\n");
-    $write("%0t [%0s]: ",$realtime,block_name);
-    $display("Error - trsac_req is active.");
-    $finish;
-    end
+    `tenv_usbdev.mntr_devstate(`tenv_usbdev.DEFAULT);
+    `tenv_usbdev.mntr_trsac_off;
+
     join
   end
 endtask 

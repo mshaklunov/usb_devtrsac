@@ -8,11 +8,21 @@ task tcase_bitstream;
   integer       i,j,k;
     
   begin
+
+  //RESET ENDPOINTS
+  @(posedge `tenv_clock.x4);
+  `tenv_usbhost.toggle_bit=0;
+  `tenv_usbdev.ep_enable=15'b000_0000_0000_0000;
+  `tenv_usbdev.ep_isoch=15'b000_0000_0000_0000;
+  `tenv_usbdev.ep_intnoretry=15'b000_0000_0000_0000;
+  @(posedge `tenv_clock.x4);
+  `tenv_usbdev.ep_enable=15'b111_1111_1111_1111;  
+  
   //#1 CHECKING WITH MAXIMUM POSITIVE JITTER
   `tenv_usb_encoder.jitter=`tenv_usbdev.speed ? 20 : 141;
   $write("\n");
   $write("%0t [%0s]: ",$realtime,block_name);
-  $display("BulkOut with cosecutive jitter=%0dns.",
+  $display("# BulkOut with cosecutive jitter=%0dns.",
           `tenv_usb_encoder.jitter);
   //BULK OUT
   ep=1;
@@ -24,7 +34,7 @@ task tcase_bitstream;
     begin
     @(posedge `tenv_clock.x4);
     #i;
-    i=i+4;
+    i=i+(`tenv_clock.x4_period/4);
     `tenv_usbhost.gen_data(0,data_size);
     `tenv_usbhost.trfer_bulk_out.ep=ep;
     `tenv_usbhost.trfer_bulk_out.data_size=data_size;
@@ -44,7 +54,7 @@ task tcase_bitstream;
   //#2 CHECKING WITH MAXIMUM NEGATIVE JITTER
   `tenv_usb_encoder.jitter=`tenv_usbdev.speed ? -20 : -141;
   $write("%0t [%0s]: ",$realtime,block_name);
-  $display("BulkOut with cosecutive jitter=%0dns.",
+  $display("# BulkOut with cosecutive jitter=%0dns.",
           `tenv_usb_encoder.jitter);
   //BULK OUT
   ep=1;
@@ -56,7 +66,7 @@ task tcase_bitstream;
     begin
     @(posedge `tenv_clock.x4);
     #i;
-    i=i+4;
+    i=i+(`tenv_clock.x4_period/4);
     `tenv_usbhost.gen_data(0,data_size);
     `tenv_usbhost.trfer_bulk_out.ep=ep;
     `tenv_usbhost.trfer_bulk_out.data_size=data_size;
@@ -75,7 +85,7 @@ task tcase_bitstream;
 
   //#3 SYNC BITS(1st 2nd) INVALID VALUE    
   $write("%0t [%0s]: ",$realtime,block_name);
-  $display("BulkOut with invalid value 1st, 2nd sync bits.");
+  $display("# BulkOut with invalid value 1st, 2nd sync bits.");
   `tenv_usb_encoder.jitter=4;
   `tenv_usb_encoder.sync_corrupt=1;
   //BULK OUT
@@ -103,7 +113,7 @@ task tcase_bitstream;
 
   //#4 SYNC BITS(1st 2nd) INVALID TIMING    
   $write("%0t [%0s]: ",$realtime,block_name);
-  $display("BulkOut with invalid sync1 timing.");
+  $display("# BulkOut with invalid sync1 timing.");
   `tenv_usb_encoder.jitter=6;
   //BULK OUT
   ep=1;
@@ -125,7 +135,7 @@ task tcase_bitstream;
         begin
         @(posedge `tenv_clock.x4);
         #i;
-        i=i+4;
+        i=i+(`tenv_clock.x4_period/4);
         `tenv_usbhost.gen_data(0,data_size);
         `tenv_usbhost.trfer_bulk_out.ep=ep;
         `tenv_usbhost.trfer_bulk_out.data_size=data_size;
@@ -156,7 +166,7 @@ task tcase_bitstream;
     begin
     `tenv_usb_encoder.err_pid[i]=1'b1;
     $write("%0t [%0s]: ",$realtime,block_name);
-    $display("BulkOut with pid bit[%0d] error.",i);
+    $display("# BulkOut with pid bit[%0d] error.",i);
     `tenv_usbhost.gen_data(0,packet_size);
     `tenv_usbhost.trsac_out.ep=ep;
     `tenv_usbhost.trsac_out.data_size=packet_size;
@@ -193,7 +203,7 @@ task tcase_bitstream;
     begin
     `tenv_usb_encoder.err_crc[i]=1'b1;
     $write("%0t [%0s]: ",$realtime,block_name);
-    $display("BulkOut with pid bit[%0d] error.",i);
+    $display("# BulkOut with crc bit[%0d] error.",i);
     `tenv_usbhost.gen_data(0,packet_size);
     `tenv_usbhost.trsac_out.ep=ep;
     `tenv_usbhost.trsac_out.data_size=packet_size;
@@ -230,7 +240,7 @@ task tcase_bitstream;
     begin
     `tenv_usb_encoder.err_crc[i]=1'b1;
     $write("%0t [%0s]: ",$realtime,block_name);
-    $display("BulkIn with pid bit[%0d] error.",i);
+    $display("# BulkIn with crc bit[%0d] error.",i);
     `tenv_usbhost.trsac_in.ep=ep;
     `tenv_usbhost.trsac_in.data_size=packet_size;
     `tenv_usbhost.trsac_in.buffer_ptr=0;
@@ -265,7 +275,7 @@ task tcase_bitstream;
     fork
     begin
     $write("%0t [%0s]: ",$realtime,block_name);
-    $display("BulkIn with with last bit stuff.");
+    $display("# BulkIn with with last bit stuff.");
     `tenv_usbhost.trsac_in.ep=ep;
     `tenv_usbhost.trsac_in.data_size=packet_size;
     `tenv_usbhost.trsac_in.buffer_ptr=0;
@@ -295,7 +305,7 @@ task tcase_bitstream;
     fork
     begin
     $write("%0t [%0s]: ",$realtime,block_name);
-    $display("BulkOut with with last bit stuff.");
+    $display("# BulkOut with with last bit stuff.");
     `tenv_usbdev.buffer[1]=8'h38;
     `tenv_usbdev.buffer[0]=8'h02;
     `tenv_usbhost.trsac_out.ep=ep;
@@ -316,5 +326,58 @@ task tcase_bitstream;
     `tenv_usbdev.check_data(0,2);
     end    
     join
+    
+  //#10 PACKET WITH LAST DRIBBLE BIT
+  `tenv_usb_encoder.jitter_lastbit=`tenv_usbdev.speed?75:260;
+  $write("%0t [%0s]: ",$realtime,block_name);
+  $display("# BulkOut with last dribble bit=%0dns.",
+          `tenv_usb_encoder.jitter_lastbit);
+  //BULK OUT
+  ep=1;
+  packet_size=`tenv_usbdev.speed?64:8;
+  data_size=packet_size*3;
+  repeat(15)
+    fork
+    begin
+    @(posedge `tenv_clock.x4);
+    `tenv_usbhost.gen_data(0,data_size);
+    `tenv_usbhost.trfer_bulk_out.ep=ep;
+    `tenv_usbhost.trfer_bulk_out.data_size=data_size;
+    `tenv_usbhost.trfer_bulk_out.packet_size=packet_size;
+    `tenv_usbhost.trfer_bulk_out;
+    ep=ep+1;
+    end
+    
+    begin
+    `tenv_usbdev.trfer_out.ep=ep;
+    `tenv_usbdev.trfer_out.data_size=data_size;
+    `tenv_usbdev.trfer_out.packet_size=packet_size;
+    `tenv_usbdev.trfer_out;
+    `tenv_usbdev.check_data(0,data_size);
+    end
+    join
+  ep=1;    
+  repeat(15)
+    fork
+    begin
+    @(posedge `tenv_clock.x4);
+    `tenv_usbhost.trfer_bulk_in.ep=ep;
+    `tenv_usbhost.trfer_bulk_in.data_size=data_size;
+    `tenv_usbhost.trfer_bulk_in.packet_size=packet_size;
+    `tenv_usbhost.trfer_bulk_in;
+    `tenv_usbhost.check_data(0,data_size);
+    ep=ep+1;
+    end
+    
+    begin
+    `tenv_usbdev.gen_data(0,data_size);
+    `tenv_usbdev.trfer_in.ep=ep;
+    `tenv_usbdev.trfer_in.data_size=data_size;
+    `tenv_usbdev.trfer_in.packet_size=packet_size;
+    `tenv_usbdev.trfer_in;
+    end
+    join
+  `tenv_usb_encoder.jitter_lastbit=0;
+  
   end
 endtask 

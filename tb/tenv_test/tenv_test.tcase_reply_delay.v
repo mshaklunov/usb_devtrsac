@@ -13,6 +13,15 @@ task tcase_reply_delay;
   $display("Maximum reply delay.");
   `tenv_usbdev.reply_delay=35;
 
+  //RESET TOGGLE BIT
+  @(posedge `tenv_clock.x4);
+  `tenv_usbhost.toggle_bit=0;
+  `tenv_usbdev.ep_enable=15'b000_0000_0000_0000;
+  `tenv_usbdev.ep_intnoretry=15'b000_0000_0000_0000;
+  @(posedge `tenv_clock.x4);
+  `tenv_usbdev.ep_enable=15'b111_1111_1111_1111;
+  `tenv_usbdev.ep_isoch=15'b100_0000_0000_0000;  
+  
   //#1 BULK_IN WITH PACKET_SIZE=MAXIMUM RFIFO CAPACITY
   ep=1;
   data_size=130;
@@ -57,7 +66,6 @@ task tcase_reply_delay;
   join
   `tenv_usbdev.check_data(0,data_size);  
   
-  `tenv_usbdev.ep_isoch=15'h7FFF;
   //#3 ISOCH_IN WITH PACKET_SIZE=MAXIMUM RFIFO CAPACITY
   ep=15;
   data_size=133;
