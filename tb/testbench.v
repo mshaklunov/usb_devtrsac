@@ -26,15 +26,15 @@ module testbench();
 //INSTANCE TEST ENVIRONMENT
   tenv_test               tenv_test();
   tenv_link               tenv_link();
-  tenv_clock              `tenv_clock();
-  tenv_usb_decoder        `tenv_usb_decoder();
-  tenv_usb_encoder        `tenv_usb_encoder();
-  tenv_usbhost            `tenv_usbhost();
-  tenv_usbdev             `tenv_usbdev();
-  tenv_descstd_device     `tenv_descstd_device();
+  tenv_clock              tenv_clock();
+  tenv_usb_decoder        tenv_usb_decoder();
+  tenv_usb_encoder        tenv_usb_encoder();
+  tenv_usbhost            tenv_usbhost();
+  tenv_usbdev             tenv_usbdev();
+  tenv_descstd_device     tenv_descstd_device();
   
 //INSTANCE DUT
-  usb_devtrsac            `dut();
+  usb_devtrsac            dut();
 
 //LAUNCH TEST
   initial
