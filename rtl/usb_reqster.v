@@ -21,7 +21,7 @@ module usb_reqster (
                     input[7:0]        bm_request_type,
                     input[7:0]        b_request,
                     input[15:0]       w_value,
-                    input[15:0]       w_index,
+                    input[3:0]        w_index,
                     //TRSAC 
                     input[1:0]        trsac_type,
                     input[3:0]        trsac_ep,
@@ -103,6 +103,7 @@ module usb_reqster (
         st_reqblock<= trsac_req_in==REQ_ACTIVE & 
                       trsac_type==TYPE_SETUP &
                       trsac_ep==4'd0 &
+                      bm_request_type==8'h00 &
                       b_request==8'h5 ? SETADDR_SETUP :
                       
                       trsac_req_in==REQ_ACTIVE & 

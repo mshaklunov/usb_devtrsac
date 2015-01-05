@@ -41,7 +41,6 @@ module usb_decoder  (
                     output reg        sof_tick,
                     output reg[10:0]  sof_value,
                     //RFIFO     
-                    input             rfifo_empty,
                     input             rfifo_full,
                     output            rdec_rfifo_wr,
                     output reg        rextr_data,
@@ -75,6 +74,7 @@ module usb_decoder  (
   wire        rdec_pidsof;
   reg         rdec_rfifo_full;
   reg[15:0]   rdec_crc;
+  reg[15:0]   rdec_crc_prev;
   reg[9:0]    rdec_counter; 
   reg[7:0]    rdec_pid;
   reg[15:0]   rdec_addrsof;
@@ -84,9 +84,8 @@ module usb_decoder  (
               RDEC_ADDR=3'd2,
               RDEC_DATA=3'd3,
               RDEC_HSK=3'd4,
-              RDEC_BYTES=3'd5,
-              RDEC_FAIL=3'd6,
-              RDEC_OK=3'd7;
+              RDEC_FAIL=3'd5,
+              RDEC_OK=3'd6;
   localparam  PID_IN=4'b1001,
               PID_OUT=4'b0001,
               PID_SOF=4'b0101,
@@ -240,6 +239,7 @@ module usb_decoder  (
       rdec_rfifo_full<=1'b0;
       rdec_rfifo_rst0<=1'b1;
       rdec_crc<=16'd0;
+      rdec_crc_prev<=16'd0;
       rdec_counter<=10'd0; 
       rdec_pid<=8'd0;
       rdec_addrsof<=11'd0;
@@ -251,6 +251,7 @@ module usb_decoder  (
       rdec_rfifo_full<= 1'b0;
       rdec_rfifo_rst0<= 1'b1;
       rdec_crc<=16'd0;
+      rdec_crc_prev<=16'd0;
       rdec_counter<=0; 
       rdec_pid<=8'd0;
       rdec_addrsof<=11'd0;
@@ -304,17 +305,21 @@ module usb_decoder  (
         end
       RDEC_ADDR:
         begin
-        rdec_counter<=  rextr_se0 ? 10'd0 : 
-                        rextr_sample ? rdec_counter+1'b1 : 
+        rdec_counter<=  rextr_sample ? rdec_counter+1'b1 : 
                         rdec_counter;
-        rdec_addrsof<=  rextr_sample ? {rextr_data,rdec_addrsof[15:1]} : 
+        rdec_addrsof<=  rextr_sample & rdec_counter[4]!=1'b1 ? 
+                        {rextr_data,rdec_addrsof[15:1]} : 
                         rdec_addrsof;
+        rdec_crc_prev<= rextr_sample ? rdec_crc : rdec_crc_prev;
         rdec_crc[4:0]<= rextr_sample & 
           (rdec_crc[4]^rextr_data) ? {rdec_crc[3:0],1'b0}^5'b00101 :
           rextr_sample ? {rdec_crc[3:0],1'b0} :
           rdec_crc;
-        rdec_state<=  rdec_counter==10'd17 ? RDEC_FAIL :
-                      rextr_se0 & rdec_crc[4:0]==5'b01100 ? RDEC_BYTES :
+        rdec_state<=  rdec_counter==10'd18 ? RDEC_FAIL :
+                      (rextr_se0 & rdec_crc[4:0]==5'b01100 & 
+                      rdec_counter[2:0]==3'd0)  |
+                      (rextr_se0 & rdec_crc_prev[4:0]==5'b01100 & 
+                      rdec_counter[2:0]==3'd1) ? RDEC_OK :
                       rextr_se0 ? RDEC_FAIL :
                       rdec_state;
         end
@@ -323,26 +328,29 @@ module usb_decoder  (
         rdec_rfifo_rst0<= 1'b1;
         rdec_counter<= rextr_sample ? rdec_counter+1'b1 : rdec_counter;
         rdec_minuscrc<= !rfifo_full &  
-                        rextr_se0 & rdec_crc==16'h800D ? 1'b1 : 1'b0;
+                        ((rextr_se0 & rdec_crc==16'h800D & 
+                        rdec_counter[2:0]==3'd0) |
+                        (rextr_se0 & rdec_crc_prev==16'h800D & 
+                        rdec_counter[2:0]==3'd1)) ? 1'b1 : 1'b0;
+        rdec_crc_prev<= rextr_sample ? rdec_crc : rdec_crc_prev;
         rdec_crc<= rextr_sample &
           (rdec_crc[15]^rextr_data) ? {rdec_crc[14:0],1'b0}^16'h8005 :
           rextr_sample ? {rdec_crc[14:0],1'b0} :
           rdec_crc;
-        rdec_state<=  rdec_counter==(10'd512+5'd16+1'b1) ? RDEC_FAIL :
-                      rextr_se0 & rdec_crc==16'h800D ? RDEC_BYTES :
+        rdec_state<=  rdec_counter==(10'd512+5'd16+2'd2) ? RDEC_FAIL :
+                      (rextr_se0 & rdec_crc==16'h800D & 
+                      rdec_counter[2:0]==3'd0) |  
+                      (rextr_se0 & rdec_crc_prev==16'h800D & 
+                      rdec_counter[2:0]==3'd1) ? RDEC_OK :
                       rextr_se0 ? RDEC_FAIL :
                       rdec_state;
         end
       RDEC_HSK:
         begin
+        rdec_counter<= rextr_sample ? rdec_counter+1'b1 : rdec_counter;
         rdec_state<=  rextr_se0 ? RDEC_OK :
-                      rextr_sample ? RDEC_FAIL: 
+                      rextr_sample & rdec_counter==10'd1 ? RDEC_FAIL: 
                       rdec_state;
-        end
-      RDEC_BYTES:
-        begin
-        rdec_minuscrc<=1'b0;
-        rdec_state<= rdec_counter[2:0]==3'd0 ? RDEC_OK : RDEC_FAIL;
         end
       RDEC_FAIL:
         begin
@@ -352,6 +360,7 @@ module usb_decoder  (
         end
       RDEC_OK:
         begin
+        rdec_minuscrc<=1'b0;
         rdec_counter<=10'd0;
         rdec_state<= RDEC_SYNC;
         end

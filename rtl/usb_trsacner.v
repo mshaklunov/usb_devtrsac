@@ -62,7 +62,7 @@ module usb_trsacner (
   reg[15:0]   crc16;
   reg[7:0]    counter;
   reg         lastbit;
-  reg         datapid;
+  reg         datapid_valid;
   reg[3:0]    trsac_state;
   localparam  TOKEN=4'd0,
               //SETUP
@@ -132,7 +132,7 @@ module usb_trsacner (
       crc16<=16'hFFFF;
       counter<=8'd0;
       lastbit<=1'b0;
-      datapid<=1'b1;
+      datapid_valid<=1'b1;
       trsac_state<=4'd0;
       end
     else if(!rst0_sync)
@@ -149,7 +149,7 @@ module usb_trsacner (
       crc16<=16'hFFFF;
       counter<=8'd0;
       lastbit<=1'b0;
-      datapid<=1'b1;
+      datapid_valid<=1'b1;
       trsac_state<=4'd0;
       end      
     else
@@ -157,23 +157,11 @@ module usb_trsacner (
       case(trsac_state)
       TOKEN:
         begin
-        datapid<=1'b1;
+        datapid_valid<=1'b1;
         counter<=8'd0;
-        toggle_bit[1]<= togglebit_rst[1] ? 1'b0 : toggle_bit[1];
-        toggle_bit[2]<= togglebit_rst[2] ? 1'b0 : toggle_bit[2];
-        toggle_bit[3]<= togglebit_rst[3] ? 1'b0 : toggle_bit[3];
-        toggle_bit[4]<= togglebit_rst[4] ? 1'b0 : toggle_bit[4];
-        toggle_bit[5]<= togglebit_rst[5] ? 1'b0 : toggle_bit[5];
-        toggle_bit[6]<= togglebit_rst[6] ? 1'b0 : toggle_bit[6];
-        toggle_bit[7]<= togglebit_rst[7] ? 1'b0 : toggle_bit[7];
-        toggle_bit[8]<= togglebit_rst[8] ? 1'b0 : toggle_bit[8];
-        toggle_bit[9]<= togglebit_rst[9] ? 1'b0 : toggle_bit[9];
-        toggle_bit[10]<= togglebit_rst[10] ? 1'b0 : toggle_bit[10];
-        toggle_bit[11]<= togglebit_rst[11] ? 1'b0 : toggle_bit[11];
-        toggle_bit[12]<= togglebit_rst[12] ? 1'b0 : toggle_bit[12];
-        toggle_bit[13]<= togglebit_rst[13] ? 1'b0 : toggle_bit[13];
-        toggle_bit[14]<= togglebit_rst[14] ? 1'b0 : toggle_bit[14];
-        toggle_bit[15]<= togglebit_rst[15] ? 1'b0 : toggle_bit[15];
+        was_in[15:1]<= was_in[15:1] & ~togglebit_rst;
+        was_out[15:1]<= was_out[15:1] & ~togglebit_rst;
+        toggle_bit[15:1]<= toggle_bit[15:1] & ~togglebit_rst;
         trsac_state<= device_state==4'd0 | 
                       (device_state==4'd1 & 
                        rdec_epaddr!=4'd0) |
@@ -229,12 +217,11 @@ module usb_trsacner (
         was_setup[rdec_epaddr]<=1'b0;
         was_out[rdec_epaddr]<=  was_setup[rdec_epaddr] ? 1'b1 : 
                                 was_out[rdec_epaddr];
-        datapid<= (toggle_bit[rdec_epaddr] & rdec_piddata1) | 
+        datapid_valid<= (toggle_bit[rdec_epaddr] & rdec_piddata1) | 
                   (!toggle_bit[rdec_epaddr] & rdec_piddata0) |
                   (was_in[rdec_epaddr] & rdec_piddata1);
         trsac_state<= ep_isoch[rdec_epaddr] & 
                       (rdec_piddata1 | rdec_piddata0) ? OUTHSK_NONE :
-                      (was_in[rdec_epaddr] & rdec_piddata1) |
                       (rdec_piddata1) | 
                       (rdec_piddata0) ? OUTHSK_SYNC :
                       trsac_state;
@@ -249,9 +236,9 @@ module usb_trsacner (
         end        
       OUTHSK_SYNC:
         begin
-        trsac_type<= datapid ? TYPE_OUT : trsac_type;
-        trsac_ep<= datapid ? rdec_epaddr : trsac_ep;
-        trsac_req<= datapid ? REQ_ACTIVE : trsac_req;
+        trsac_type<= datapid_valid ? TYPE_OUT : trsac_type;
+        trsac_ep<= datapid_valid ? rdec_epaddr : trsac_ep;
+        trsac_req<= datapid_valid ? REQ_ACTIVE : trsac_req;
         trsac_encfifo_wr<=  lastbit & trsac_encfifo_wr ? 1'b0 :
                             !encfifo_full ? 1'b1 : 1'b0;    
         trsac_encfifo_wdata<= !encfifo_full ? sync[counter] : 
@@ -269,17 +256,17 @@ module usb_trsacner (
         begin
         toggle_bit[rdec_epaddr]<= trsac_reply==REPLY_ACK & 
                                   lastbit & trsac_encfifo_wr & 
-                                  datapid ? ~toggle_bit[rdec_epaddr] : 
+                                  datapid_valid? ~toggle_bit[rdec_epaddr]:
                                   toggle_bit[rdec_epaddr];
         trsac_encfifo_wr<=  lastbit & trsac_encfifo_wr ? 1'b0 :
                             !encfifo_full ? 1'b1 : 1'b0;    
         trsac_encfifo_wdata<= encfifo_full ? trsac_encfifo_wdata :
         
                               trsac_reply==REPLY_NAK & 
-                              datapid ? pid_nak[counter] :
+                              datapid_valid ? pid_nak[counter] :
                               
                               trsac_reply==REPLY_STALL & 
-                              datapid ? pid_stall[counter] :
+                              datapid_valid ? pid_stall[counter] :
                               
                               pid_ack[counter];
         counter<= lastbit & trsac_encfifo_wr ? 8'd0 : 
@@ -372,7 +359,7 @@ module usb_trsacner (
         end
       TRSAC_OK:
         begin
-        trsac_req<= datapid ? REQ_OK : trsac_req;
+        trsac_req<= datapid_valid ? REQ_OK : trsac_req;
         trsac_state<= TOKEN;
         end
       TRSAC_FAIL:

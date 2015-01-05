@@ -120,7 +120,6 @@ module usb_devtrsac (
                   .sof_tick(sof_tick),
                   .sof_value(sof_value),
                   //RFIFO
-                  .rfifo_empty(rfifo_empty),
                   .rfifo_full(rfifo_full),
                   .rdec_rfifo_wr(rdec_rfifo_wr),
                   .rextr_data(rextr_data),
@@ -193,7 +192,7 @@ module usb_devtrsac (
                   .bm_request_type(bm_request_type),
                   .b_request(b_request),
                   .w_value(w_value),
-                  .w_index(w_index),
+                  .w_index(w_index[3:0]),
                   //TRSAC
                   .trsac_type(trsac_type),
                   .trsac_ep(trsac_ep),
