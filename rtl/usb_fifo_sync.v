@@ -3,7 +3,7 @@
 Purpose
 
   Synchronous FIFO.
-  
+
 ------------------------------------------------------------------------*/
 module usb_fifo_sync #(
                       parameter                     ADDR_WIDTH=4,
@@ -14,11 +14,11 @@ module usb_fifo_sync #(
                       input                         clk,
                       input                         rst0_async,
                       input                         rst0_sync,
-                        
+
                       input                         wr_en,
                       input[(1<<WDATA_WIDTH)-1:0]   wr_data,
-                        
-                      input                         rd_en,  
+
+                      input                         rd_en,
                       output[(1<<RDATA_WIDTH)-1:0]  rd_data,
 
                       output                        fifo_full,
@@ -38,10 +38,10 @@ module usb_fifo_sync #(
     assign rd_data[k]= mem[ (rd_addr[ADDR_WIDTH-1:RDATA_WIDTH]<<
                              RDATA_WIDTH)+k ];
     end
-    
+
   if(WDATA_WIDTH>RDATA_WIDTH)
     begin
-    assign fifo_full=  wr_addr[ADDR_WIDTH]!=rd_addr[ADDR_WIDTH] & 
+    assign fifo_full=  wr_addr[ADDR_WIDTH]!=rd_addr[ADDR_WIDTH] &
                        wr_addr[ADDR_WIDTH-1:WDATA_WIDTH]==
                        rd_addr[ADDR_WIDTH-1:WDATA_WIDTH] ? 1'b1 : 1'b0;
     assign fifo_empty= wr_addr[ADDR_WIDTH:WDATA_WIDTH]==
@@ -49,7 +49,7 @@ module usb_fifo_sync #(
     end
   else
     begin
-    assign fifo_full=  wr_addr[ADDR_WIDTH]!=rd_addr[ADDR_WIDTH] & 
+    assign fifo_full=  wr_addr[ADDR_WIDTH]!=rd_addr[ADDR_WIDTH] &
                        wr_addr[ADDR_WIDTH-1:RDATA_WIDTH]==
                        rd_addr[ADDR_WIDTH-1:RDATA_WIDTH] ? 1'b1 : 1'b0;
     assign fifo_empty= wr_addr[ADDR_WIDTH:RDATA_WIDTH]==
@@ -78,7 +78,7 @@ module usb_fifo_sync #(
         end
       end
     end
-    
+
   //BUFFER
   generate
   genvar i,j;
@@ -90,8 +90,8 @@ module usb_fifo_sync #(
         if(!rst0_async)
           mem[j]<=1'b0;
         else
-          mem[j]<=  wr_addr[ADDR_WIDTH-1:WDATA_WIDTH]==i & 
-                    !fifo_full & wr_en ? wr_data[j%(1<<WDATA_WIDTH)] : 
+          mem[j]<=  wr_addr[ADDR_WIDTH-1:WDATA_WIDTH]==i &
+                    !fifo_full & wr_en ? wr_data[j%(1<<WDATA_WIDTH)] :
                     mem[j];
       end
     end

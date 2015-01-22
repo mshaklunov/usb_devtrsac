@@ -2,8 +2,9 @@
 
 Purpose
 
-  Synchronous FIFO extended for usb packet decoding.
-  
+  Synchronous FIFO extended for hiding last 2 bytes (crc16 field of the
+  usb data packet).
+
 ------------------------------------------------------------------------*/
 module usb_fifo_rcv  #(
                       parameter                     ADDR_WIDTH=4,
@@ -14,35 +15,25 @@ module usb_fifo_rcv  #(
                       input                         clk,
                       input                         rst0_async,
                       input                         rst0_sync,
-                        
+
                       input                         wr_en,
                       input[(1<<WDATA_WIDTH)-1:0]   wr_data,
-                        
-                      input                         rd_en,  
+
+                      input                         rd_en,
                       output[(1<<RDATA_WIDTH)-1:0]  rd_data,
 
                       output                        fifo_full,
-                      output                        fifo_empty,
-
-                      //EXTENDED
-                      input                         wr_minus16,                      
-                      output[7:0]                   bm_request_type,
-                      output[7:0]                   b_request,
-                      output[15:0]                  w_value,
-                      output[15:0]                  w_index
+                      output                        fifo_empty
                       );
 
   localparam                  FIFO_LENGTH= 1<<ADDR_WIDTH;
   reg[FIFO_LENGTH-1:0]        mem;
+  reg                         wr_shift;
+  reg[ADDR_WIDTH:WDATA_WIDTH] wr_addr_no2bytes;
   reg[ADDR_WIDTH:WDATA_WIDTH] wr_addr;
   reg[ADDR_WIDTH:RDATA_WIDTH] rd_addr;
 
   //CONTROL
-  assign bm_request_type= mem[7:0];
-  assign b_request= mem[15:8];
-  assign w_value= mem[31:16];
-  assign w_index= mem[47:32];
-  
   generate
   genvar k;
   for(k=0; k<(1<<RDATA_WIDTH); k=k+1)
@@ -50,21 +41,20 @@ module usb_fifo_rcv  #(
     assign rd_data[k]= mem[ (rd_addr[ADDR_WIDTH-1:RDATA_WIDTH]<<
                              RDATA_WIDTH)+k ];
     end
-    
   if(WDATA_WIDTH>RDATA_WIDTH)
     begin
-    assign fifo_full=  wr_addr[ADDR_WIDTH]!=rd_addr[ADDR_WIDTH] & 
+    assign fifo_full=  wr_addr[ADDR_WIDTH]!=rd_addr[ADDR_WIDTH] &
                        wr_addr[ADDR_WIDTH-1:WDATA_WIDTH]==
                        rd_addr[ADDR_WIDTH-1:WDATA_WIDTH] ? 1'b1 : 1'b0;
-    assign fifo_empty= wr_addr[ADDR_WIDTH:WDATA_WIDTH]==
+    assign fifo_empty= wr_addr_no2bytes[ADDR_WIDTH:WDATA_WIDTH]==
                        rd_addr[ADDR_WIDTH:WDATA_WIDTH] ? 1'b1 : 1'b0;
     end
   else
     begin
-    assign fifo_full=  wr_addr[ADDR_WIDTH]!=rd_addr[ADDR_WIDTH] & 
+    assign fifo_full=  wr_addr[ADDR_WIDTH]!=rd_addr[ADDR_WIDTH] &
                        wr_addr[ADDR_WIDTH-1:RDATA_WIDTH]==
                        rd_addr[ADDR_WIDTH-1:RDATA_WIDTH] ? 1'b1 : 1'b0;
-    assign fifo_empty= wr_addr[ADDR_WIDTH:RDATA_WIDTH]==
+    assign fifo_empty= wr_addr_no2bytes[ADDR_WIDTH:RDATA_WIDTH]==
                        rd_addr[ADDR_WIDTH:RDATA_WIDTH] ? 1'b1 : 1'b0;
     end
   endgenerate
@@ -73,6 +63,8 @@ module usb_fifo_rcv  #(
     begin
     if(!rst0_async)
       begin
+      wr_shift<=1'b0;
+      wr_addr_no2bytes<={(ADDR_WIDTH-WDATA_WIDTH+1){1'b0}};
       wr_addr<={(ADDR_WIDTH-WDATA_WIDTH+1){1'b0}};
       rd_addr<={(ADDR_WIDTH-RDATA_WIDTH+1){1'b0}};
       end
@@ -80,18 +72,24 @@ module usb_fifo_rcv  #(
       begin
       if(!rst0_sync)
         begin
+        wr_shift<=1'b0;
+        wr_addr_no2bytes<={(ADDR_WIDTH-WDATA_WIDTH+1){1'b0}};
         wr_addr<={(ADDR_WIDTH-WDATA_WIDTH+1){1'b0}};
         rd_addr<={(ADDR_WIDTH-RDATA_WIDTH+1){1'b0}};
         end
       else
         begin
-        wr_addr<= wr_minus16 ? wr_addr-5'd16 : 
-                  wr_en & !fifo_full ? wr_addr+1'b1 : wr_addr;
+        wr_shift<= wr_en & !fifo_full & wr_addr[3:0]==4'd15 ? 1'b1 :
+                   wr_shift;
+        wr_addr_no2bytes<= wr_shift & wr_en &
+                           !fifo_full ? wr_addr_no2bytes+1'b1:
+                           wr_addr_no2bytes;
+        wr_addr<= wr_en & !fifo_full ? wr_addr+1'b1 : wr_addr;
         rd_addr<= rd_en & !fifo_empty ? rd_addr+1'b1 : rd_addr;
         end
       end
     end
-    
+
   //BUFFER
   generate
   genvar i,j;
@@ -103,8 +101,8 @@ module usb_fifo_rcv  #(
         if(!rst0_async)
           mem[j]<=1'b0;
         else
-          mem[j]<=  wr_addr[ADDR_WIDTH-1:WDATA_WIDTH]==i & 
-                    !fifo_full & wr_en ? wr_data[j%(1<<WDATA_WIDTH)] : 
+          mem[j]<=  wr_addr[ADDR_WIDTH-1:WDATA_WIDTH]==i &
+                    !fifo_full & wr_en ? wr_data[j%(1<<WDATA_WIDTH)] :
                     mem[j];
       end
     end

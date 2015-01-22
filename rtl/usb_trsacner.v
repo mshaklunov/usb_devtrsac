@@ -12,14 +12,14 @@
   - wait HANDSHAKE packet from USB host (for not isochronous endpoints);
   - status transaction.
 
-3 Transaction OUT/SETUP control  
+3 Transaction OUT/SETUP control
 
   - Receive TOKEN packet;
   - receive DATA packet;
   - request to user and wait reply from user;
   - send HANDSHAKE packet to USB host (for not isochronous endpoints);
   - status transaction.
-  
+
 ------------------------------------------------------------------------*/
 module usb_trsacner (
                     input           clk,
@@ -33,13 +33,15 @@ module usb_trsacner (
                     input           rdec_piddata0,
                     input           rdec_piddata1,
                     input           rdec_pidack,
-                    //ENCODER   
+                    input          rdec_ok,
+                    input          rdec_fail,
+                    //ENCODER
                     input           encfifo_full,
                     input           dtx_oe,
                     output reg      trsac_encfifo_wr,
-                    output reg      trsac_encfifo_wdata,
+                    output          trsac_encfifo_wdata,
                     output          trsac_tfifoenc_en,
-                    //TFIFO   
+                    //TFIFO
                     input           tfifo_empty,
                     input           tfifo_rdata,
                     //TRSAC
@@ -47,15 +49,15 @@ module usb_trsacner (
                     output reg[1:0] trsac_req,
                     output reg[1:0] trsac_type,
                     output reg[3:0] trsac_ep,
-                    
+
                     input[15:0]     ep_isoch,
                     input[15:0]     ep_intnoretry,
-                    
+
                     input[15:1]     togglebit_rst,
                     input[2:0]      device_state
                     );
-                    
-  reg[15:0]   was_setup;      
+
+  reg[15:0]   was_setup;
   reg[15:0]   was_out;
   reg[15:0]   was_in;
   reg[15:0]   toggle_bit;
@@ -63,6 +65,7 @@ module usb_trsacner (
   reg[7:0]    counter;
   reg         lastbit;
   reg         datapid_valid;
+  wire        datapid_valid_comb;
   reg[3:0]    trsac_state;
   localparam  TOKEN=4'd0,
               //SETUP
@@ -73,7 +76,7 @@ module usb_trsacner (
               OUTDATA=4'd4,
               OUTHSK_SYNC=4'd5,
               OUTHSK_PID=4'd6,
-              OUTHSK_NONE=4'd7,              
+              OUTHSK_NONE=4'd7,
               //IN
               INDATA_SYNC=4'd8,
               INDATA_PID=4'd9,
@@ -91,7 +94,7 @@ module usb_trsacner (
               PID_DATA1=4'b1011,
               PID_ACK=4'b0010,
               PID_NAK=4'b1010,
-              PID_STALL=4'b1110;        
+              PID_STALL=4'b1110;
   wire[7:0]   sync;
   wire[7:0]   pid_ack;
   wire[7:0]   pid_nak;
@@ -115,13 +118,39 @@ module usb_trsacner (
   assign pid_data1= {~PID_DATA1,PID_DATA1};
   assign pid_data0= {~PID_DATA0,PID_DATA0};
   assign trsac_tfifoenc_en= trsac_state==INDATA_DATA;
-  
+  assign datapid_valid_comb= (toggle_bit[rdec_epaddr] & rdec_piddata1) |
+                              (!toggle_bit[rdec_epaddr] & rdec_piddata0) |
+                              (was_in[rdec_epaddr] & rdec_piddata1);
+  assign trsac_encfifo_wdata= trsac_state==SETUPHSK_SYNC |
+                          trsac_state==OUTHSK_SYNC |
+                          trsac_state==INDATA_SYNC ? sync[counter] :
+
+                          trsac_state==INDATA_CRC16 ? ~crc16[8'd15] :
+
+                          (trsac_state==OUTHSK_PID |
+                          trsac_state==INDATA_PID) &
+                          trsac_reply==REPLY_NAK ? pid_nak[counter] :
+
+                          (trsac_state==OUTHSK_PID |
+                          trsac_state==INDATA_PID) &
+                          trsac_reply==REPLY_STALL ? pid_stall[counter] :
+
+                          trsac_state==INDATA_PID &
+                          !ep_isoch[trsac_ep] &
+                          (was_out[trsac_ep] |
+                          toggle_bit[trsac_ep]) ? pid_data1[counter] :
+
+                          trsac_state==INDATA_PID ? pid_data0[counter] :
+
+                          (trsac_state==OUTHSK_PID |
+                          trsac_state==SETUPHSK_PID) ? pid_ack[counter] :
+                          1'b0;
+
   always @(posedge clk, negedge rst0_async)
     begin
     if(!rst0_async)
       begin
       trsac_encfifo_wr<=1'b0;
-      trsac_encfifo_wdata<=1'b0;
       trsac_req<=REQ_OK;
       trsac_type<=2'd0;
       trsac_ep<=4'd0;
@@ -132,13 +161,12 @@ module usb_trsacner (
       crc16<=16'hFFFF;
       counter<=8'd0;
       lastbit<=1'b0;
-      datapid_valid<=1'b1;
+      datapid_valid<=1'b0;
       trsac_state<=4'd0;
       end
     else if(!rst0_sync)
       begin
       trsac_encfifo_wr<=1'b0;
-      trsac_encfifo_wdata<=1'b0;
       trsac_req<=REQ_OK;
       trsac_type<=2'd0;
       trsac_ep<=4'd0;
@@ -149,23 +177,23 @@ module usb_trsacner (
       crc16<=16'hFFFF;
       counter<=8'd0;
       lastbit<=1'b0;
-      datapid_valid<=1'b1;
+      datapid_valid<=1'b0;
       trsac_state<=4'd0;
-      end      
+      end
     else
       begin
       case(trsac_state)
       TOKEN:
         begin
-        datapid_valid<=1'b1;
+        datapid_valid<=1'b0;
         counter<=8'd0;
         was_in[15:1]<= was_in[15:1] & ~togglebit_rst;
         was_out[15:1]<= was_out[15:1] & ~togglebit_rst;
         toggle_bit[15:1]<= toggle_bit[15:1] & ~togglebit_rst;
-        trsac_state<= device_state==4'd0 | 
-                      (device_state==4'd1 & 
+        trsac_state<= device_state==4'd0 |
+                      (device_state==4'd1 &
                        rdec_epaddr!=4'd0) |
-                      (device_state==4'd2 & 
+                      (device_state==4'd2 &
                        rdec_epaddr!=4'd0) ? trsac_state :
                       rdec_pidin ? INDATA_SYNC :
                       rdec_pidout ? OUTDATA :
@@ -174,150 +202,132 @@ module usb_trsacner (
         end
       SETUPDATA:
         begin
-        was_setup[rdec_epaddr]<=1'b1;
-        was_in[rdec_epaddr]<=1'b0;
-        was_out[rdec_epaddr]<=1'b0;
-        trsac_state<= rdec_piddata0 ? SETUPHSK_SYNC : trsac_state;
+        trsac_type<= rdec_piddata0 ? TYPE_SETUP : trsac_type;
+        trsac_ep<= rdec_piddata0 ? rdec_epaddr : trsac_ep;
+        trsac_req<= rdec_piddata0 ? REQ_ACTIVE : trsac_req;
+        datapid_valid<= rdec_piddata0 ? 1'b1 : datapid_valid;
+        trsac_state<= rdec_ok & datapid_valid ? SETUPHSK_SYNC :
+                      (rdec_ok & !datapid_valid) | rdec_fail ? TRSAC_FAIL:
+                      trsac_state;
         end
       SETUPHSK_SYNC:
         begin
-        trsac_type<= TYPE_SETUP;
-        trsac_ep<= rdec_epaddr;
-        trsac_req<= REQ_ACTIVE;
-        trsac_encfifo_wr<= lastbit & trsac_encfifo_wr ? 1'b0 :
+        was_setup[trsac_ep]<= 1'b1;
+        was_in[trsac_ep]<=1'b0;
+        was_out[trsac_ep]<=1'b0;
+        trsac_encfifo_wr<= counter==8'd7 & !encfifo_full &
+                           trsac_encfifo_wr ? 1'b0 :
                            !encfifo_full ? 1'b1 : 1'b0;
-        trsac_encfifo_wdata<= !encfifo_full ? sync[counter] : 
-                              trsac_encfifo_wdata;
-        counter<= lastbit & trsac_encfifo_wr ? 8'd0 : 
-                  trsac_encfifo_wr & !encfifo_full & 
-                  counter!=8'd7 ? counter+1'b1 : 
+        counter<= counter==8'd7 & !encfifo_full &
+                  trsac_encfifo_wr ? 8'd0 :
+                  trsac_encfifo_wr & !encfifo_full ? counter+1'b1 :
                   counter;
-        lastbit<= lastbit & trsac_encfifo_wr ? 1'b0 :
-                  counter==8'd7 ? 1'b1 : 1'b0;
-        trsac_state<= lastbit & trsac_encfifo_wr ? SETUPHSK_PID :
+        trsac_state<= counter==8'd7 & !encfifo_full &
+                      trsac_encfifo_wr ? SETUPHSK_PID :
                       trsac_state;
-        end  
+        end
       SETUPHSK_PID:
         begin
-        toggle_bit[rdec_epaddr]<=1'b1;
-        trsac_encfifo_wr<=  lastbit & trsac_encfifo_wr ? 1'b0 :
-                            !encfifo_full ? 1'b1 : 1'b0;    
-        trsac_encfifo_wdata<= !encfifo_full ? pid_ack[counter] : 
-                              trsac_encfifo_wdata;
-        counter<= lastbit & trsac_encfifo_wr ? 8'd0 : 
-                  trsac_encfifo_wr & !encfifo_full & 
-                  counter!=8'd7 ? counter+1'b1 : 
+        toggle_bit[trsac_ep]<=1'b1;
+        trsac_encfifo_wr<=  counter==8'd7 & !encfifo_full &
+                            trsac_encfifo_wr ? 1'b0 :
+                            !encfifo_full ? 1'b1 : 1'b0;
+        counter<= counter==8'd7 & !encfifo_full &
+                  trsac_encfifo_wr ? 8'd0 :
+                  trsac_encfifo_wr & !encfifo_full ? counter+1'b1 :
                   counter;
-        lastbit<= lastbit & trsac_encfifo_wr ? 1'b0 :
-                  counter==8'd7 ? 1'b1 : 1'b0;
-        trsac_state<= lastbit & trsac_encfifo_wr ? TRSAC_OK : trsac_state;
+        trsac_state<= counter==8'd7 & !encfifo_full &
+                      trsac_encfifo_wr ? TRSAC_OK :
+                      trsac_state;
         end
       OUTDATA:
         begin
-        was_setup[rdec_epaddr]<=1'b0;
-        was_out[rdec_epaddr]<=  was_setup[rdec_epaddr] ? 1'b1 : 
-                                was_out[rdec_epaddr];
-        datapid_valid<= (toggle_bit[rdec_epaddr] & rdec_piddata1) | 
-                  (!toggle_bit[rdec_epaddr] & rdec_piddata0) |
-                  (was_in[rdec_epaddr] & rdec_piddata1);
-        trsac_state<= ep_isoch[rdec_epaddr] & 
-                      (rdec_piddata1 | rdec_piddata0) ? OUTHSK_NONE :
-                      (rdec_piddata1) | 
-                      (rdec_piddata0) ? OUTHSK_SYNC :
+        trsac_type<= datapid_valid_comb ? TYPE_OUT : trsac_type;
+        trsac_ep<= datapid_valid_comb ? rdec_epaddr : trsac_ep;
+        trsac_req<= datapid_valid_comb ? REQ_ACTIVE : trsac_req;
+        datapid_valid<= datapid_valid_comb ? 1'b1 : datapid_valid;
+        trsac_state<= ep_isoch[trsac_ep] & rdec_ok ? OUTHSK_NONE :
+                      ep_isoch[trsac_ep] & rdec_fail ? TRSAC_FAIL :
+                      rdec_ok |
+                      (rdec_fail & trsac_reply==REPLY_NAK) |
+                      (rdec_fail & trsac_reply==REPLY_STALL) ?OUTHSK_SYNC:
+                      rdec_fail ? TRSAC_FAIL :
                       trsac_state;
         end
       OUTHSK_NONE:
         begin
-        trsac_type<= TYPE_OUT;
-        trsac_ep<= rdec_epaddr;
-        trsac_req<= REQ_ACTIVE;
         counter<= counter+1'b1;
         trsac_state<= counter==8'd34 ? TRSAC_OK : trsac_state;
-        end        
+        end
       OUTHSK_SYNC:
         begin
-        trsac_type<= datapid_valid ? TYPE_OUT : trsac_type;
-        trsac_ep<= datapid_valid ? rdec_epaddr : trsac_ep;
-        trsac_req<= datapid_valid ? REQ_ACTIVE : trsac_req;
-        trsac_encfifo_wr<=  lastbit & trsac_encfifo_wr ? 1'b0 :
-                            !encfifo_full ? 1'b1 : 1'b0;    
-        trsac_encfifo_wdata<= !encfifo_full ? sync[counter] : 
-                              trsac_encfifo_wdata;
-        counter<= lastbit & trsac_encfifo_wr ? 8'd0 : 
-                  trsac_encfifo_wr & !encfifo_full & counter!=8'd7 ? 
-                  counter+1'b1 : 
+        was_setup[trsac_ep]<=1'b0;
+        was_out[trsac_ep]<= was_setup[trsac_ep] ? 1'b1 :
+                            was_out[trsac_ep];
+        trsac_encfifo_wr<= counter==8'd7 & !encfifo_full &
+                           trsac_encfifo_wr ? 1'b0 :
+                           !encfifo_full ? 1'b1 : 1'b0;
+        counter<= counter==8'd7 & !encfifo_full &
+                  trsac_encfifo_wr ? 8'd0 :
+                  trsac_encfifo_wr & !encfifo_full ? counter+1'b1 :
                   counter;
-        lastbit<= lastbit & trsac_encfifo_wr ? 1'b0 :
-                  counter==8'd7 ? 1'b1 : 1'b0;
-        trsac_state<= lastbit & trsac_encfifo_wr ? OUTHSK_PID : 
+        trsac_state<= counter==8'd7 & !encfifo_full &
+                      trsac_encfifo_wr ? OUTHSK_PID :
                       trsac_state;
         end
       OUTHSK_PID:
         begin
-        toggle_bit[rdec_epaddr]<= trsac_reply==REPLY_ACK & 
-                                  lastbit & trsac_encfifo_wr & 
-                                  datapid_valid? ~toggle_bit[rdec_epaddr]:
-                                  toggle_bit[rdec_epaddr];
-        trsac_encfifo_wr<=  lastbit & trsac_encfifo_wr ? 1'b0 :
-                            !encfifo_full ? 1'b1 : 1'b0;    
-        trsac_encfifo_wdata<= encfifo_full ? trsac_encfifo_wdata :
-        
-                              trsac_reply==REPLY_NAK & 
-                              datapid_valid ? pid_nak[counter] :
-                              
-                              trsac_reply==REPLY_STALL & 
-                              datapid_valid ? pid_stall[counter] :
-                              
-                              pid_ack[counter];
-        counter<= lastbit & trsac_encfifo_wr ? 8'd0 : 
-                  trsac_encfifo_wr & !encfifo_full & 
-                  counter!=8'd7 ? counter+1'b1 : 
+        toggle_bit[trsac_ep]<= trsac_reply==REPLY_ACK &
+                               counter==8'd7 & !encfifo_full &
+                               trsac_encfifo_wr &
+                               datapid_valid? ~toggle_bit[trsac_ep]:
+                               toggle_bit[trsac_ep];
+        trsac_encfifo_wr<=  counter==8'd7 & !encfifo_full &
+                            trsac_encfifo_wr ? 1'b0 :
+                            !encfifo_full ? 1'b1 : 1'b0;
+        counter<= counter==8'd7 & !encfifo_full &
+                  trsac_encfifo_wr ? 8'd0 :
+                  trsac_encfifo_wr & !encfifo_full ? counter+1'b1 :
                   counter;
-        lastbit<= lastbit & trsac_encfifo_wr ? 1'b0 :
-                  counter==8'd7 ? 1'b1 : 1'b0;
-        trsac_state<= lastbit & trsac_encfifo_wr ? TRSAC_OK : trsac_state;
+        trsac_state<= counter==8'd7 & !encfifo_full &
+                      trsac_encfifo_wr ? TRSAC_OK :
+                      trsac_state;
         end
       INDATA_SYNC:
         begin
+        datapid_valid<=1'b1;
         trsac_type<= TYPE_IN;
         trsac_ep<= rdec_epaddr;
         trsac_req<= REQ_ACTIVE;
-        trsac_encfifo_wr<=  lastbit & trsac_encfifo_wr ? 1'b0 :
-                            !encfifo_full ? 1'b1 : 1'b0;    
-        trsac_encfifo_wdata<= !encfifo_full ? sync[counter] : 
-                              trsac_encfifo_wdata;
-        counter<= lastbit & trsac_encfifo_wr ? 8'd0 : 
-                  trsac_encfifo_wr & !encfifo_full & 
-                  counter!=8'd7 ? counter+1'b1 : 
+        trsac_encfifo_wr<= counter==8'd7 & !encfifo_full &
+                           trsac_encfifo_wr ? 1'b0 :
+                           !encfifo_full ? 1'b1 : 1'b0;
+        counter<= counter==8'd7 & !encfifo_full &
+                  trsac_encfifo_wr ? 8'd0 :
+                  trsac_encfifo_wr & !encfifo_full ? counter+1'b1 :
                   counter;
-        lastbit<= lastbit & trsac_encfifo_wr ? 1'b0 :
-                  counter==8'd7 ? 1'b1 : 1'b0;
-        trsac_state<= lastbit & trsac_encfifo_wr ? INDATA_PID : 
+        trsac_state<= counter==8'd7 & !encfifo_full &
+                      trsac_encfifo_wr ? INDATA_PID :
                       trsac_state;
         end
       INDATA_PID:
         begin
-        was_setup[rdec_epaddr]<=1'b0;
-        was_in[rdec_epaddr]<= was_setup[rdec_epaddr] ? 1'b1 : 
-                              was_in[rdec_epaddr];
+        was_setup[trsac_ep]<=1'b0;
+        was_in[trsac_ep]<= was_setup[trsac_ep] ? 1'b1 :
+                           was_in[trsac_ep];
         crc16<= 16'hFFFF;
-        trsac_encfifo_wr<= lastbit & trsac_encfifo_wr ? 1'b0 :
+        trsac_encfifo_wr<= counter==8'd7 & !encfifo_full &
+                           trsac_encfifo_wr ? 1'b0 :
                            !encfifo_full ? 1'b1 : 1'b0;
-        trsac_encfifo_wdata<= encfifo_full ? trsac_encfifo_wdata :
-                            trsac_reply==REPLY_NAK ? pid_nak[counter] :
-                            trsac_reply==REPLY_STALL ? pid_stall[counter]:
-                            ep_isoch[rdec_epaddr] ? pid_data0[counter]:
-                            was_out[rdec_epaddr] | 
-                            toggle_bit[rdec_epaddr] ? pid_data1[counter] : 
-                            pid_data0[counter];
-        counter<= lastbit & trsac_encfifo_wr ? 8'd0 : 
-                  trsac_encfifo_wr & !encfifo_full & 
-                  counter!=8'd7 ? counter+1'b1 : counter;
-        lastbit<= lastbit & trsac_encfifo_wr ? 1'b0 :
-                  counter==8'd7 ? 1'b1 : 1'b0;
-        trsac_state<= lastbit & trsac_encfifo_wr & 
+        counter<= counter==8'd7 & !encfifo_full &
+                  trsac_encfifo_wr ? 8'd0 :
+                  trsac_encfifo_wr & !encfifo_full ? counter+1'b1 :
+                  counter;
+        trsac_state<= counter==8'd7 & !encfifo_full &
+                      trsac_encfifo_wr &
                       trsac_reply==REPLY_ACK ? INDATA_DATA :
-                      lastbit & trsac_encfifo_wr ? TRSAC_OK :
+                      counter==8'd7 & !encfifo_full &
+                      trsac_encfifo_wr ? TRSAC_OK :
                       trsac_state;
         end
       INDATA_DATA:
@@ -325,7 +335,7 @@ module usb_trsacner (
         trsac_encfifo_wr<=  tfifo_empty ? 1'b0 :
                             !encfifo_full ? 1'b1 : 1'b0;
         crc16<= trsac_encfifo_wr & !encfifo_full &
-                (crc16[15]^tfifo_rdata) ? 
+                (crc16[15]^tfifo_rdata) ?
                 {crc16[14:0],1'b0}^16'h8005 :
                 trsac_encfifo_wr & !encfifo_full ? {crc16[14:0],1'b0} :
                 crc16;
@@ -333,28 +343,30 @@ module usb_trsacner (
         end
       INDATA_CRC16:
         begin
-        trsac_encfifo_wr<=  lastbit & trsac_encfifo_wr ? 1'b0 :
-                            !encfifo_full ? 1'b1 : 1'b0;
-        trsac_encfifo_wdata<= !encfifo_full ? ~crc16[4'd15-counter] : 
-                              trsac_encfifo_wdata;
-        counter<= lastbit & trsac_encfifo_wr ? 8'd0 : 
-                  trsac_encfifo_wr & !encfifo_full & 
-                  counter!=8'd15 ? counter+1'b1 : 
+        trsac_encfifo_wr<= counter==8'd15 & !encfifo_full &
+                           trsac_encfifo_wr ? 1'b0 :
+                           !encfifo_full ? 1'b1 : 1'b0;
+        crc16<= trsac_encfifo_wr & !encfifo_full ? {crc16[14:0],1'b0} :
+                crc16;
+        counter<= counter==8'd15 & !encfifo_full &
+                  trsac_encfifo_wr ? 8'd0 :
+                  trsac_encfifo_wr & !encfifo_full ? counter+1'b1 :
                   counter;
-        lastbit<= lastbit & trsac_encfifo_wr ? 1'b0 :
-                  counter==8'd15 ? 1'b1 : 1'b0;
-        trsac_state<= lastbit & trsac_encfifo_wr &
-                      ep_isoch[rdec_epaddr] ? TRSAC_OK :
-                      lastbit & trsac_encfifo_wr ? INHSK : trsac_state;
+        trsac_state<= counter==8'd15 & !encfifo_full &
+                      trsac_encfifo_wr &
+                      !ep_isoch[trsac_ep] ? INHSK :
+                      counter==8'd15 & !encfifo_full &
+                      trsac_encfifo_wr ? TRSAC_OK :
+                      trsac_state;
         end
       INHSK:
         begin
         counter<= !dtx_oe ? counter+1'b1 : counter;
-        toggle_bit[rdec_epaddr]<= ep_intnoretry[rdec_epaddr] |
-                                  rdec_pidack ? ~toggle_bit[rdec_epaddr] :
-                                  toggle_bit[rdec_epaddr];
+        toggle_bit[trsac_ep]<= ep_intnoretry[trsac_ep] |
+                                  rdec_pidack ? ~toggle_bit[trsac_ep] :
+                                  toggle_bit[trsac_ep];
         trsac_state<=counter==(5'd16*3'd4+5'd17*3'd4) ? TRSAC_FAIL :
-                     rdec_pidack | ep_intnoretry[rdec_epaddr] ? TRSAC_OK : 
+                     rdec_pidack | ep_intnoretry[trsac_ep] ? TRSAC_OK :
                      trsac_state;
         end
       TRSAC_OK:
@@ -366,7 +378,23 @@ module usb_trsacner (
         begin
         trsac_req<= REQ_FAIL;
         trsac_state<= TOKEN;
-        end  
+        end
+      default:
+        begin
+        trsac_encfifo_wr<=1'b0;
+        trsac_req<=REQ_OK;
+        trsac_type<=2'd0;
+        trsac_ep<=4'd0;
+        was_setup<=16'd0;
+        was_out<=16'd0;
+        was_in<=16'd0;
+        toggle_bit<=16'd0;
+        crc16<=16'hFFFF;
+        counter<=8'd0;
+        lastbit<=1'b0;
+        datapid_valid<=1'b0;
+        trsac_state<=4'd0;
+        end
       endcase
       end
     end

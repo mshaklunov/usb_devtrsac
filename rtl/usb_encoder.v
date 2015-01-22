@@ -4,9 +4,9 @@ Purpose
 
   - Data serializing;
   - bit staffing;
-  - nrzi encoding; 
+  - nrzi encoding;
   - remote wakeup signaling.
-  
+
 ------------------------------------------------------------------------*/
 module usb_encoder  (
                     input       clk,
@@ -22,7 +22,7 @@ module usb_encoder  (
                     input       encfifo_wr,
                     input       encfifo_wdata,
                     output      encfifo_full,
-                    
+
                     input       remote_wakeup,
                     input       speed
                     );
@@ -45,23 +45,23 @@ module usb_encoder  (
                     ENC_TIME3=4'd7,
                     ENC_DRIVEK=4'd8;
 
-  usb_fifo_sync  #(.ADDR_WIDTH(1),.WDATA_WIDTH(0),.RDATA_WIDTH(0))
+  usb_fifo_sync #(.ADDR_WIDTH(1'd1),.WDATA_WIDTH(1'd0),.RDATA_WIDTH(1'd0))
       i_encfifo
-                  (
-                  .clk(clk),
-                  .rst0_async(rst0_async),
-                  .rst0_sync(rst0_sync),
-                  
-                  .wr_en(encfifo_wr),
-                  .wr_data(encfifo_wdata),
-                  
-                  .rd_en(encfifo_rd),
-                  .rd_data(encfifo_rdata),
-  
-                  .fifo_full(encfifo_full),
-                  .fifo_empty(encfifo_empty)
-                  );
-  
+                 (
+                 .clk(clk),
+                 .rst0_async(rst0_async),
+                 .rst0_sync(rst0_sync),
+
+                 .wr_en(encfifo_wr),
+                 .wr_data(encfifo_wdata),
+
+                 .rd_en(encfifo_rd),
+                 .rd_data(encfifo_rdata),
+
+                 .fifo_full(encfifo_full),
+                 .fifo_empty(encfifo_empty)
+                 );
+
   assign  usb_j= speed ? 1'b1 : 1'b0;
   assign  usb_k= speed ? 1'b0 : 1'b1;
   always @(posedge clk, negedge rst0_async)
@@ -85,7 +85,7 @@ module usb_encoder  (
       counter<=18'd0;
       stuffbit<=3'd0;
       enc_state<=ENC_IDLE;
-      end      
+      end
     else
       begin
       case(enc_state)
@@ -96,17 +96,17 @@ module usb_encoder  (
         encfifo_rd<=1'b0;
         dtx_plus<= usb_j;
         dtx_minus<= ~usb_j;
-        dtx_oe<=  (!encfifo_empty & usb_interpack) | 
+        dtx_oe<=  (!encfifo_empty & usb_interpack) |
                   remote_wakeup ? 1'b1 : 1'b0;
-        enc_state<= remote_wakeup ? ENC_DRIVEK : 
-                    !encfifo_empty & usb_interpack ? ENC_TIME1 : 
+        enc_state<= remote_wakeup ? ENC_DRIVEK :
+                    !encfifo_empty & usb_interpack ? ENC_TIME1 :
                     enc_state;
         end
       ENC_TIME1:
         begin
         counter<= counter+1'b1;
-        encfifo_rd<= counter==18'd2 & stuffbit!=3'd6 & 
-                     !encfifo_empty ? 1'b1 : 
+        encfifo_rd<= counter==18'd2 & stuffbit!=3'd6 &
+                     !encfifo_empty ? 1'b1 :
                      1'b0;
         enc_state<= counter==18'd2 & stuffbit==3'd6 ? ENC_STUFF :
                     counter==18'd2 & encfifo_empty ? ENC_SE0 :
@@ -164,10 +164,20 @@ module usb_encoder  (
         //REMOTE WAKEUP SIGNALING:
         //                        ~145000 CYCLES ~2,9ms (FULL SPEED)
         //                        ~18000 CYCLES ~3ms (LOW SPEED)
-        enc_state<= (speed & counter==18'd145000) | 
+        enc_state<= (speed & counter==18'd145000) |
                     (!speed & counter==18'd18000) ? ENC_IDLE : enc_state;
+        end
+      default:
+        begin
+        dtx_plus<=1'b1;
+        dtx_minus<=1'b0;
+        dtx_oe<=1'b0;
+        encfifo_rd<=1'b0;
+        counter<=18'd0;
+        stuffbit<=3'd0;
+        enc_state<=ENC_IDLE;
         end
       endcase
       end
-    end    
+    end
 endmodule
