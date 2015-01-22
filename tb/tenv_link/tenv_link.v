@@ -1,15 +1,16 @@
 
 `include "tenv_link/tenv_usbtrver.v"
+
 module tenv_link;
-  
-  /*
+
+  /*---------------------------------------------------------------------
   MODULE REFERENCE
     `tenv_clock
     `dut
     `tenv_usbdev
     `tenv_usbdecoder
     `tenv_usbencoder
-  */
+  ----------------------------------------------------------------------*/
 
   wire dp, dn;
 
@@ -36,6 +37,10 @@ module tenv_link;
   
   assign #1 `dut.device_wakeup=`tenv_usbdev.device_wakeup;
   assign #1 `dut.device_speed=`tenv_usbdev.speed;
+  assign #1 `dut.device_addr_wr=`tenv_usbdev.device_addr_wr;
+  assign #1 `dut.device_addr=`tenv_usbdev.device_addr;
+  assign #1 `dut.device_config_wr=`tenv_usbdev.device_config_wr;
+  assign #1 `dut.device_config=`tenv_usbdev.device_config;
   assign #1 `tenv_usbdev.device_state=`dut.device_state;
   
   assign #1 `tenv_usbdev.sof_tick=`dut.sof_tick;

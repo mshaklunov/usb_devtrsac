@@ -1193,6 +1193,7 @@ task tcase_trfer_control;
     `tenv_usbdev.trsac_in.data_size=0;
     `tenv_usbdev.trsac_in.buffer_ptr=j;
     `tenv_usbdev.trsac_in.handshake=`tenv_usbdev.ACK;
+    `tenv_usbdev.trsac_in.status=`tenv_usbdev.REQ_FAIL;
     `tenv_usbdev.trsac_in;
     j=j+`tenv_usbdev.trsac_in.data_size;
     //STATUS STAGE
@@ -1200,6 +1201,7 @@ task tcase_trfer_control;
     `tenv_usbdev.trsac_in.data_size=0;
     `tenv_usbdev.trsac_in.buffer_ptr=j;
     `tenv_usbdev.trsac_in.handshake=`tenv_usbdev.ACK;
+    `tenv_usbdev.trsac_in.status=`tenv_usbdev.REQ_FAIL;
     `tenv_usbdev.trsac_in;
     j=j+`tenv_usbdev.trsac_in.data_size;
     //STATUS STAGE
@@ -1207,9 +1209,10 @@ task tcase_trfer_control;
     `tenv_usbdev.trsac_in.data_size=0;
     `tenv_usbdev.trsac_in.buffer_ptr=j;
     `tenv_usbdev.trsac_in.handshake=`tenv_usbdev.ACK;
+    `tenv_usbdev.trsac_in.status=`tenv_usbdev.REQ_OK;
     `tenv_usbdev.trsac_in;
     j=j+`tenv_usbdev.trsac_in.data_size;    
     end
     join
   end
-endtask 
+endtask

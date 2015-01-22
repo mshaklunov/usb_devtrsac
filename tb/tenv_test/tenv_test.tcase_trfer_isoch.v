@@ -21,9 +21,9 @@ task tcase_trfer_isoch;
   `tenv_usbdev.ep_enable=15'b111_1111_1111_1111;
   `tenv_usbdev.ep_isoch=15'b111_1111_1111_1111;
   
-  //#1 ISOCH_IN WITH PACKET_SIZE=MAXIMUM RFIFO CAPACITY
+  //#1 ISOCH_IN WITH VARIOUS PACKET_SIZE
   $write("%0t [%0s]: ",$realtime,block_name);
-  $display("# IsochronousIn with packet_size=maximum.");  
+  $display("# IsochronousIn with various packet_size.");  
   ep=15;
   data_size=133;
   packet_size=`tenv_usbdev.speed?64:8;
@@ -45,9 +45,9 @@ task tcase_trfer_isoch;
   join
   `tenv_usbhost.check_data(0,data_size);
   
-  //#2 ISOCH_IN WITH PACKET_SIZE<MAXIMUM RFIFO CAPACITY
+  //#2 ISOCH_IN WITH VARIOUS PACKET_SIZE
   $write("%0t [%0s]: ",$realtime,block_name);
-  $display("# IsochronousIn with packet_size<maximum.");
+  $display("# IsochronousIn with various packet_size.");
   @(posedge `tenv_clock.x4);
   `tenv_usbhost.toggle_bit=0;
   `tenv_usbdev.ep_enable=15'b000_0000_0000_0000;
@@ -99,9 +99,9 @@ task tcase_trfer_isoch;
     end
   `tenv_usbdev.ep_isoch=15'b111_1111_1111_1111;
   
-  //#3 ISOCH_OUT WITH PACKET_SIZE=MAXIMUM TFIFO CAPACITY
+  //#3 ISOCH_OUT WITH VARIOUS PACKET_SIZE
   $write("%0t [%0s]: ",$realtime,block_name);
-  $display("# IsochronousOut with packet_size=maximum.");
+  $display("# IsochronousOut with various packet_size.");
   ep=15;
   data_size=134;
   packet_size=`tenv_usbdev.speed?64:8;
@@ -123,9 +123,9 @@ task tcase_trfer_isoch;
   join
   `tenv_usbdev.check_data(0,data_size);
   
-  //#4 ISOCH_OUT WITH PACKET_SIZE<MAXIMUM TFIFO CAPACITY
+  //#4 ISOCH_OUT WITH VARIOUS PACKET_SIZE
   $write("%0t [%0s]: ",$realtime,block_name);
-  $display("# IsochronousOut with packet_size<maximum.");  
+  $display("# IsochronousOut with various packet_size.");  
   @(posedge `tenv_clock.x4);
   `tenv_usbhost.toggle_bit=0;
   `tenv_usbdev.ep_enable=15'b000_0000_0000_0000;

@@ -1,6 +1,6 @@
 
 module tenv_test;
-  /*
+  /*----------------------------------------------------------------------
   MODULE REFERENCE
     `tenv_clock
     `tenv_usbhost
@@ -8,7 +8,7 @@ module tenv_test;
     `tenv_descstd_device
     `tenv_usbdecoder
     `tenv_usbencoder
-  */
+  ----------------------------------------------------------------------*/
   //IFACE
   reg           start=0;
   //LOCAL   

@@ -62,6 +62,9 @@ task reqstd_clrfeat;
     trsac_in.buffer_ptr=0;
     trsac_in.handshake=ACK;
     trsac_in;
+    ep_enable[ep]=1'b0;
+    @(posedge `tenv_clock.x4);
+    ep_enable[ep]=1'b1;
     end
   else if(status==STALL)
     begin

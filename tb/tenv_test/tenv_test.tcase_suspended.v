@@ -109,8 +109,13 @@ task tcase_suspended;
   $write("%0t [%0s]: ",$realtime,block_name);  
   $display("# ADDRESSED TO SUSPENDED.");
   `tenv_usbhost.reqstd_setaddr.dev_addr_new=$dist_uniform(seed,1,127);
-  `tenv_usbhost.reqstd_setaddr;
-  repeat(10) @(posedge `tenv_clock.x4);  
+  `tenv_usbdev.reqstd_setaddr.dev_addr_new=
+                                `tenv_usbhost.reqstd_setaddr.dev_addr_new;
+  `tenv_usbdev.reqstd_setaddr.status=`tenv_usbdev.ACK;
+  fork
+    `tenv_usbhost.reqstd_setaddr;
+    `tenv_usbdev.reqstd_setaddr;
+  join
   if(`tenv_usbdev.device_state!=`tenv_usbdev.ADDRESSED)
     begin
     $write("\n");

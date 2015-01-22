@@ -33,6 +33,10 @@ module tenv_usbdev;
         
   reg           speed=0;
   reg           device_wakeup=0;
+  reg           device_addr_wr=0;
+  reg[6:0]      device_addr=0;
+  reg           device_config_wr=0;
+  reg[7:0]      device_config=0;
   wire[2:0]     device_state;
   parameter     POWERED=3'd0,
                 DEFAULT=3'd1,
@@ -80,6 +84,7 @@ module tenv_usbdev;
   `include "tenv_usbdev/tenv_usbdev.trfer_out.v"   
   `include "tenv_usbdev/tenv_usbdev.reqstd_getdesc.v"
   `include "tenv_usbdev/tenv_usbdev.reqstd_setconf.v"
+  `include "tenv_usbdev/tenv_usbdev.reqstd_setaddr.v"
   `include "tenv_usbdev/tenv_usbdev.reqstd_clrfeat.v"
   
 endmodule

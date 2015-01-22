@@ -11,20 +11,19 @@ task tcase_addressed;
   //#1 SET ADDRESS
   $write("%0t [%0s]: ",$realtime,block_name);
   $display("# Set USB device address.");
+  `tenv_usbhost.reqstd_setaddr.dev_addr_new=$dist_uniform(seed,1,127);
+  `tenv_usbdev.reqstd_setaddr.dev_addr_new=
+                                `tenv_usbhost.reqstd_setaddr.dev_addr_new;
+  `tenv_usbdev.reqstd_setaddr.status=`tenv_usbdev.ACK;
   fork
-    begin
-    `tenv_usbhost.reqstd_setaddr.dev_addr_new=$dist_uniform(seed,1,127);
     `tenv_usbhost.reqstd_setaddr;
-    disable `tenv_usbdev.mntr_trsac_off;
-    end
-
-    `tenv_usbdev.mntr_trsac_off;
+    `tenv_usbdev.reqstd_setaddr;
   join
   if(`tenv_usbdev.device_state!=`tenv_usbdev.ADDRESSED)
     begin
     $write("\n");
     $write("%0t [%0s]: ",$realtime,block_name);
-    $display("Error - invalid device_state. Code0.");
+    $display("Error - invalid device_state.");
     $finish;
     end  
   
@@ -100,7 +99,13 @@ task tcase_addressed;
   $write("%0t [%0s]: ",$realtime,block_name);
   $display("# Go to DEFAULT with SetAddress(0).");
   `tenv_usbhost.reqstd_setaddr.dev_addr_new=0;
-  `tenv_usbhost.reqstd_setaddr;
+  `tenv_usbdev.reqstd_setaddr.dev_addr_new=
+                                `tenv_usbhost.reqstd_setaddr.dev_addr_new;
+  `tenv_usbdev.reqstd_setaddr.status=`tenv_usbdev.ACK;
+  fork
+    `tenv_usbhost.reqstd_setaddr;
+    `tenv_usbdev.reqstd_setaddr;
+  join
   if(`tenv_usbdev.device_state!=`tenv_usbdev.DEFAULT)
     begin
     $write("\n");
@@ -110,14 +115,13 @@ task tcase_addressed;
     end
   
   //BACK TO ADDRESSED
+  `tenv_usbhost.reqstd_setaddr.dev_addr_new=$dist_uniform(seed,1,127);
+  `tenv_usbdev.reqstd_setaddr.dev_addr_new=
+                                `tenv_usbhost.reqstd_setaddr.dev_addr_new;
+  `tenv_usbdev.reqstd_setaddr.status=`tenv_usbdev.ACK;
   fork
-    begin
-    `tenv_usbhost.reqstd_setaddr.dev_addr_new=$dist_uniform(seed,1,127);
     `tenv_usbhost.reqstd_setaddr;
-    disable `tenv_usbdev.mntr_trsac_off;
-    end
-
-    `tenv_usbdev.mntr_trsac_off;
+    `tenv_usbdev.reqstd_setaddr;
   join
   if(`tenv_usbdev.device_state!=`tenv_usbdev.ADDRESSED)
     begin
@@ -144,14 +148,13 @@ task tcase_addressed;
   `tenv_usbhost.dev_addr=0;  
 
   //BACK TO ADDRESSED
+  `tenv_usbhost.reqstd_setaddr.dev_addr_new=$dist_uniform(seed,1,127);
+  `tenv_usbdev.reqstd_setaddr.dev_addr_new=
+                                `tenv_usbhost.reqstd_setaddr.dev_addr_new;
+  `tenv_usbdev.reqstd_setaddr.status=`tenv_usbdev.ACK;
   fork
-    begin
-    `tenv_usbhost.reqstd_setaddr.dev_addr_new=$dist_uniform(seed,1,127);
     `tenv_usbhost.reqstd_setaddr;
-    disable `tenv_usbdev.mntr_trsac_off;
-    end
-
-    `tenv_usbdev.mntr_trsac_off;
+    `tenv_usbdev.reqstd_setaddr;
   join
   if(`tenv_usbdev.device_state!=`tenv_usbdev.ADDRESSED)
     begin

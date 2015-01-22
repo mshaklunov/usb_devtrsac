@@ -26,12 +26,18 @@ task trsac_in;
     //WRITE DATA
     i=0;
     @(posedge `tenv_clock.x4);
-    while(trsac_req==1 & tfifo_full==0 & i<data_size)
+    while(trsac_req==REQ_ACTIVE & i<data_size)
       begin
-      tfifo_wr=1;
-      tfifo_wdata=buffer[buffer_ptr+i];
-      i=i+1;
+      if(!tfifo_full)
+        begin
+        tfifo_wr=1;
+        tfifo_wdata=buffer[buffer_ptr+i];
+        end
+      else
+        tfifo_wr=0;
       @(posedge `tenv_clock.x4);
+      if(tfifo_wr & !tfifo_full)
+        i=i+1;
       end
     tfifo_wr=0;
     @(posedge `tenv_clock.x4);

@@ -1,12 +1,11 @@
 
-task reqstd_setconf;
+task reqstd_setaddr;
   //IFACE
-  reg[7:0]      conf_value;
+  reg[7:0]      dev_addr_new;
   integer       status;
   //LOCAL   
-  localparam    block_name="tenv_usbdev/reqstd_setconf";
+  localparam    block_name="tenv_usbdev/reqstd_setaddr";
   integer       i;
-  reg[15:1]     ep_enable_temp;
   
   begin
   //SETUP STAGE
@@ -22,14 +21,14 @@ task reqstd_setconf;
   w_index={buffer[5],buffer[4]};
   w_length={buffer[7],buffer[6]};
   if(!(bm_request_type==8'd0 &
-    b_request==SET_CONFIGURATION & 
-    w_value=={8'd0,conf_value} &
+    b_request==SET_ADDRESS & 
+    w_value=={8'd0,dev_addr_new} &
     w_index==0 &
     w_length==0))
     begin
     $write("\n");
     $write("%0t [%0s]: ",$realtime,block_name);
-    $display("Error - invalid request SetConfiguration().");
+    $display("Error - invalid request SetAddress().");
     $finish;
     end
   //STATUS STAGE
@@ -40,13 +39,11 @@ task reqstd_setconf;
     trsac_in.buffer_ptr=0;
     trsac_in.handshake=ACK;
     trsac_in;
-    device_config_wr=1'b1;
-    device_config=conf_value;
-    ep_enable_temp=ep_enable;
-    ep_enable=15'h0000;
+    device_addr_wr=1'b1;
+    device_addr=dev_addr_new;
     @(posedge `tenv_clock.x4);
-    device_config_wr=1'b0;
-    ep_enable=ep_enable_temp;
+    device_addr_wr=1'b0;
+    repeat(4) @(posedge `tenv_clock.x4);
     end
   else if(status==STALL)
     begin

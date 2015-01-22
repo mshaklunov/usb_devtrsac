@@ -28,13 +28,24 @@ task trsac_out;
   
   //READ DATA
   i=0;
-  rfifo_rd=1;
-  @(posedge `tenv_clock.x4);
-  while(!rfifo_empty)
+  while(trsac_req==REQ_ACTIVE)
     begin
-    buffer[buffer_ptr+i]=rfifo_rdata;
-    i=i+1;
-    @(posedge `tenv_clock.x4);
+    if(!rfifo_empty & !rfifo_rd)
+      begin
+      rfifo_rd=1;
+      @(posedge `tenv_clock.x4);
+      end
+    else  if(!rfifo_empty & rfifo_rd)
+      begin
+      buffer[buffer_ptr+i]=rfifo_rdata;
+      i=i+1;
+      @(posedge `tenv_clock.x4);
+      end
+    else
+      begin
+      rfifo_rd=0;
+      @(posedge `tenv_clock.x4);
+      end
     end
   if(i!==data_size)
     begin
@@ -44,7 +55,6 @@ task trsac_out;
     $finish;    
     end
   data_size=i;
-  rfifo_rd=0;
 
   //ENDOK
   while(~(trsac_req==REQ_OK & trsac_type==TYPE_OUT & trsac_ep==ep))

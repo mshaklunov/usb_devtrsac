@@ -40,7 +40,7 @@ task trsac_in;
       begin
       $write("\n");
       $write("%0t [%0s]: ",$realtime,block_name);
-      $display("Error - invalid bytes quantity",i);
+      $display("Error - invalid bytes quantity");
       $finish;    
       end
     i=0;
@@ -100,7 +100,7 @@ task trsac_in;
       begin
       $write("\n");
       $write("%0t [%0s]: ",$realtime,block_name);
-      $display("Error - invalid bytes quantity",i);
+      $display("Error - invalid bytes quantity");
       $finish;    
       end
     i=0;
@@ -135,7 +135,7 @@ task trsac_in;
       begin
       $write("\n");
       $write("%0t [%0s]: ",$realtime,block_name);
-      $display("Error - invalid bytes quantity",i);
+      $display("Error - invalid bytes quantity");
       $finish;    
       end
     i=0;

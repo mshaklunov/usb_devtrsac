@@ -170,7 +170,13 @@ task tcase_configured;
 
   //BACK
   `tenv_usbhost.reqstd_setaddr.dev_addr_new=$dist_uniform(seed,1,127);
-  `tenv_usbhost.reqstd_setaddr;
+  `tenv_usbdev.reqstd_setaddr.dev_addr_new=
+                                `tenv_usbhost.reqstd_setaddr.dev_addr_new;
+  `tenv_usbdev.reqstd_setaddr.status=`tenv_usbdev.ACK;
+  fork
+    `tenv_usbhost.reqstd_setaddr;
+    `tenv_usbdev.reqstd_setaddr;
+  join
 
   i=$dist_uniform(seed,1,255);
   fork

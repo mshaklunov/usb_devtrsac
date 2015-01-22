@@ -21,11 +21,11 @@ task tcase_trfer_bulkint;
   @(posedge `tenv_clock.x4);
   `tenv_usbdev.ep_enable=15'b111_1111_1111_1111;
   
-  //#1 BULK_IN WITH PACKET_SIZE=MAXIMUM RFIFO CAPACITY
+  //#1 BULK_IN WITH VARIOUS PACKET_SIZE
   $write("%0t [%0s]: ",$realtime,block_name);
-  $display("# BulkIn with packet_size=maximum.");
+  $display("# BulkIn with various packet_size.");
   ep=1;
-  data_size=130;
+  data_size=137;
   packet_size=`tenv_usbdev.speed?64:8;
   `tenv_usbdev.gen_data(0,data_size);
   fork
@@ -45,12 +45,12 @@ task tcase_trfer_bulkint;
   join
   `tenv_usbhost.check_data(0,data_size);
   
-  //#2 BULK_IN WITH PACKET_SIZE<MAXIMUM RFIFO CAPACITY
+  //#2 BULK_IN WITH VARIOUS PACKET_SIZE
   $write("%0t [%0s]: ",$realtime,block_name);
-  $display("# BulkIn with packet_size<maximum.");
+  $display("# BulkIn with various packet_size.");
   ep=1;
-  data_size=39;
-  packet_size=9;
+  data_size=31;
+  packet_size=`tenv_usbdev.speed?9:7;
   `tenv_usbdev.gen_data(0,data_size);
   fork
     begin
@@ -71,61 +71,60 @@ task tcase_trfer_bulkint;
   
   //#3 BULK_IN WITH NAK, TOGGLE BIT RETRY
   ep=1;
-  packet_size=1;
   $write("%0t [%0s]: ",$realtime,block_name);
   $display("# BulkIn(ep=%0d) with NAK",ep);  
   fork
     begin
     i=0;
     `tenv_usbhost.trsac_in.ep=ep;
-    `tenv_usbhost.trsac_in.data_size=packet_size;
-    `tenv_usbhost.trsac_in.buffer_ptr=i*packet_size;
+    `tenv_usbhost.trsac_in.data_size=1;
+    `tenv_usbhost.trsac_in.buffer_ptr=i;
     `tenv_usbhost.trsac_in.handshake=`tenv_usbhost.ACK;
     `tenv_usbhost.trsac_in;
     `tenv_usbhost.toggle_bit[ep]=~`tenv_usbhost.toggle_bit[ep];
-    `tenv_usbhost.check_data(i*packet_size,packet_size);
-    
+    `tenv_usbhost.check_data(i,1);
     i=i+1;
+
     `tenv_usbhost.trsac_in.ep=ep;
-    `tenv_usbhost.trsac_in.data_size=packet_size;
-    `tenv_usbhost.trsac_in.buffer_ptr=i*packet_size;
+    `tenv_usbhost.trsac_in.data_size=6;
+    `tenv_usbhost.trsac_in.buffer_ptr=i;
     `tenv_usbhost.trsac_in.handshake=`tenv_usbhost.NAK;
     `tenv_usbhost.trsac_in;
-    
-    i=i+1;
+    i=i+6;
+
     `tenv_usbhost.trsac_in.ep=ep;
-    `tenv_usbhost.trsac_in.data_size=packet_size;
-    `tenv_usbhost.trsac_in.buffer_ptr=i*packet_size;
+    `tenv_usbhost.trsac_in.data_size=1;
+    `tenv_usbhost.trsac_in.buffer_ptr=i;
     `tenv_usbhost.trsac_in.handshake=`tenv_usbhost.ACK;
     `tenv_usbhost.trsac_in;
     `tenv_usbhost.toggle_bit[ep]=~`tenv_usbhost.toggle_bit[ep];
-    `tenv_usbhost.check_data(i*packet_size,packet_size);
+    `tenv_usbhost.check_data(i,1);
     end
     
     begin
     j=0;
-    `tenv_usbdev.gen_data(j*packet_size,packet_size);
+    `tenv_usbdev.gen_data(j,1);
     `tenv_usbdev.trsac_in.ep=ep;
-    `tenv_usbdev.trsac_in.data_size=packet_size;
-    `tenv_usbdev.trsac_in.buffer_ptr=j*packet_size;
+    `tenv_usbdev.trsac_in.data_size=1;
+    `tenv_usbdev.trsac_in.buffer_ptr=j;
     `tenv_usbdev.trsac_in.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_in.status=`tenv_usbdev.REQ_OK;
     `tenv_usbdev.trsac_in;
-
     j=j+1;
-    `tenv_usbdev.gen_data(j*packet_size,packet_size);    
+    
+    `tenv_usbdev.gen_data(j,6);
     `tenv_usbdev.trsac_in.ep=ep;
-    `tenv_usbdev.trsac_in.data_size=packet_size;
-    `tenv_usbdev.trsac_in.buffer_ptr=j*packet_size;
+    `tenv_usbdev.trsac_in.data_size=6;
+    `tenv_usbdev.trsac_in.buffer_ptr=j;
     `tenv_usbdev.trsac_in.handshake=`tenv_usbdev.NAK;
     `tenv_usbdev.trsac_in.status=`tenv_usbdev.REQ_OK;
     `tenv_usbdev.trsac_in;
-    
-    j=j+1;
-    `tenv_usbdev.gen_data(j*packet_size,packet_size);
+    j=j+6;
+
+    `tenv_usbdev.gen_data(j,1);
     `tenv_usbdev.trsac_in.ep=ep;
-    `tenv_usbdev.trsac_in.data_size=packet_size;
-    `tenv_usbdev.trsac_in.buffer_ptr=j*packet_size;
+    `tenv_usbdev.trsac_in.data_size=1;
+    `tenv_usbdev.trsac_in.buffer_ptr=j;
     `tenv_usbdev.trsac_in.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_in.status=`tenv_usbdev.REQ_OK;
     `tenv_usbdev.trsac_in;
@@ -134,61 +133,60 @@ task tcase_trfer_bulkint;
 
   //#4 BULK_IN WITH STALL, TOGGLE BIT RETRY
   ep=1;
-  packet_size=1;
   $write("%0t [%0s]: ",$realtime,block_name);
   $display("# BulkIn(ep=%0d) with STALL",ep);  
   fork
     begin
     i=0;
     `tenv_usbhost.trsac_in.ep=ep;
-    `tenv_usbhost.trsac_in.data_size=packet_size;
-    `tenv_usbhost.trsac_in.buffer_ptr=i*packet_size;
+    `tenv_usbhost.trsac_in.data_size=1;
+    `tenv_usbhost.trsac_in.buffer_ptr=i;
     `tenv_usbhost.trsac_in.handshake=`tenv_usbhost.ACK;
     `tenv_usbhost.trsac_in;
     `tenv_usbhost.toggle_bit[ep]=~`tenv_usbhost.toggle_bit[ep];
-    `tenv_usbhost.check_data(i*packet_size,packet_size);
-    
+    `tenv_usbhost.check_data(i,1);
     i=i+1;
+
     `tenv_usbhost.trsac_in.ep=ep;
-    `tenv_usbhost.trsac_in.data_size=packet_size;
-    `tenv_usbhost.trsac_in.buffer_ptr=i*packet_size;
+    `tenv_usbhost.trsac_in.data_size=3;
+    `tenv_usbhost.trsac_in.buffer_ptr=i;
     `tenv_usbhost.trsac_in.handshake=`tenv_usbhost.STALL;
     `tenv_usbhost.trsac_in;
-    
-    i=i+1;
+    i=i+3;
+
     `tenv_usbhost.trsac_in.ep=ep;
-    `tenv_usbhost.trsac_in.data_size=packet_size;
-    `tenv_usbhost.trsac_in.buffer_ptr=i*packet_size;
+    `tenv_usbhost.trsac_in.data_size=1;
+    `tenv_usbhost.trsac_in.buffer_ptr=i;
     `tenv_usbhost.trsac_in.handshake=`tenv_usbhost.ACK;
     `tenv_usbhost.trsac_in;
     `tenv_usbhost.toggle_bit[ep]=~`tenv_usbhost.toggle_bit[ep];
-    `tenv_usbhost.check_data(i*packet_size,packet_size);
+    `tenv_usbhost.check_data(i,1);
     end
     
     begin
     j=0;
-    `tenv_usbdev.gen_data(j*packet_size,packet_size);
+    `tenv_usbdev.gen_data(j,1);
     `tenv_usbdev.trsac_in.ep=ep;
-    `tenv_usbdev.trsac_in.data_size=packet_size;
-    `tenv_usbdev.trsac_in.buffer_ptr=j*packet_size;
+    `tenv_usbdev.trsac_in.data_size=1;
+    `tenv_usbdev.trsac_in.buffer_ptr=j;
     `tenv_usbdev.trsac_in.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_in.status=`tenv_usbdev.REQ_OK;
     `tenv_usbdev.trsac_in;
-
     j=j+1;
-    `tenv_usbdev.gen_data(j*packet_size,packet_size);    
+
+    `tenv_usbdev.gen_data(j,3);    
     `tenv_usbdev.trsac_in.ep=ep;
-    `tenv_usbdev.trsac_in.data_size=packet_size;
-    `tenv_usbdev.trsac_in.buffer_ptr=j*packet_size;
+    `tenv_usbdev.trsac_in.data_size=3;
+    `tenv_usbdev.trsac_in.buffer_ptr=j;
     `tenv_usbdev.trsac_in.handshake=`tenv_usbdev.STALL;
     `tenv_usbdev.trsac_in.status=`tenv_usbdev.REQ_OK;
     `tenv_usbdev.trsac_in;
-    
-    j=j+1;
-    `tenv_usbdev.gen_data(j*packet_size,packet_size);
+    j=j+3;
+
+    `tenv_usbdev.gen_data(j,1);
     `tenv_usbdev.trsac_in.ep=ep;
-    `tenv_usbdev.trsac_in.data_size=packet_size;
-    `tenv_usbdev.trsac_in.buffer_ptr=j*packet_size;
+    `tenv_usbdev.trsac_in.data_size=1;
+    `tenv_usbdev.trsac_in.buffer_ptr=j;
     `tenv_usbdev.trsac_in.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_in.status=`tenv_usbdev.REQ_OK;
     `tenv_usbdev.trsac_in;
@@ -259,9 +257,9 @@ task tcase_trfer_bulkint;
     end
   join
   
-  //#6 BULK_OUT WITH PACKET_SIZE=MAXIMUM TFIFO CAPACITY
+  //#6 BULK_OUT WITH VARIOUS PACKET_SIZE
   $write("%0t [%0s]: ",$realtime,block_name);
-  $display("# BulkOut with packet_size=maximum.");
+  $display("# BulkOut with various packet_size.");
   ep=1;
   data_size=131;
   packet_size=`tenv_usbdev.speed?64:8;
@@ -283,9 +281,9 @@ task tcase_trfer_bulkint;
   join
   `tenv_usbdev.check_data(0,data_size);
   
-  //#7 BULK_OUT
+  //#7 BULK_OUT WITH VARIOUS PACKET_SIZE
   $write("%0t [%0s]: ",$realtime,block_name);
-  $display("# BulkOut with packet_size=maximum.");  
+  $display("# BulkOut with various packet_size");  
   ep=1;
   data_size=47;
   packet_size=11;
@@ -546,7 +544,7 @@ task tcase_trfer_bulkint;
         `tenv_usbhost.trsac_in.ep=ep;
         `tenv_usbhost.trsac_in.data_size=packet_size;
         `tenv_usbhost.trsac_in.buffer_ptr=i*packet_size;
-        `tenv_usbhost.trsac_in.handshake=`tenv_usbhost.NOREPLY;
+        `tenv_usbhost.trsac_in.handshake=`tenv_usbhost.HSKERR;
         `tenv_usbhost.trsac_in;
         if(`tenv_usbdev.ep_intnoretry[ep]==1)
           `tenv_usbhost.toggle_bit[ep]=~`tenv_usbhost.toggle_bit[ep];//1
@@ -558,7 +556,7 @@ task tcase_trfer_bulkint;
         `tenv_usbhost.trsac_in.ep=ep;
         `tenv_usbhost.trsac_in.data_size=packet_size;
         `tenv_usbhost.trsac_in.buffer_ptr=i*packet_size;
-        `tenv_usbhost.trsac_in.handshake=`tenv_usbhost.NOREPLY;
+        `tenv_usbhost.trsac_in.handshake=`tenv_usbhost.HSKERR;
         `tenv_usbhost.trsac_in;
         if(`tenv_usbdev.ep_intnoretry[ep]==1)
           `tenv_usbhost.toggle_bit[ep]=~`tenv_usbhost.toggle_bit[ep];//0
@@ -591,7 +589,9 @@ task tcase_trfer_bulkint;
         `tenv_usbdev.trsac_in.data_size=packet_size;
         `tenv_usbdev.trsac_in.buffer_ptr=j*packet_size;
         `tenv_usbdev.trsac_in.handshake=`tenv_usbdev.ACK;
-        `tenv_usbdev.trsac_in.status=`tenv_usbdev.REQ_OK;
+        `tenv_usbdev.trsac_in.status=
+                    `tenv_usbdev.ep_intnoretry[ep] ? `tenv_usbdev.REQ_OK : 
+                    `tenv_usbdev.REQ_FAIL;
         `tenv_usbdev.trsac_in;
 
         j=j+1;
@@ -600,7 +600,9 @@ task tcase_trfer_bulkint;
         `tenv_usbdev.trsac_in.data_size=packet_size;
         `tenv_usbdev.trsac_in.buffer_ptr=j*packet_size;
         `tenv_usbdev.trsac_in.handshake=`tenv_usbdev.ACK;
-        `tenv_usbdev.trsac_in.status=`tenv_usbdev.REQ_OK;
+        `tenv_usbdev.trsac_in.status=
+                    `tenv_usbdev.ep_intnoretry[ep] ? `tenv_usbdev.REQ_OK : 
+                    `tenv_usbdev.REQ_FAIL;
         `tenv_usbdev.trsac_in;
         
         j=j+1;
