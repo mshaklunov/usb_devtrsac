@@ -5,22 +5,22 @@ task reqstd_clrfeat;
   localparam    DEVICE=0,
                 INTERFACE=1,
                 ENDPOINT=2;
-  integer       feature;            
+  integer       feature;
   localparam    EP_HALT=0,
                 REMOTE_WAKEUP=1;
   reg[3:0]      ep;
-  reg           ep_dir;  
+  reg           ep_dir;
   reg[7:0]      iface;
   integer       status;
-    
-  //LOCAL   
+
+  //LOCAL
   localparam    block_name="tenv_usbdev/reqstd_clrfeat";
   integer       i;
 
   begin
   //SETUP STAGE
   trsac_setup.ep=0;
-  trsac_setup.data_size=8;
+  trsac_setup.pack_size=8;
   trsac_setup.buffer_ptr=0;
   trsac_setup.handshake=ACK;
   trsac_setup;
@@ -31,12 +31,12 @@ task reqstd_clrfeat;
   w_value={buffer[3],buffer[2]};
   w_index={buffer[5],buffer[4]};
   w_length={buffer[7],buffer[6]};
-  
+
   if( !(bm_request_type==type[7:0] &
-        b_request==CLEAR_FEATURE & 
+        b_request==CLEAR_FEATURE &
         w_length==feature &
-        w_index==(type==DEVICE ? 0 : 
-                 type==INTERFACE ? {8'd0,iface} : 
+        w_index==(type==DEVICE ? 0 :
+                 type==INTERFACE ? {8'd0,iface} :
                  {8'd0,ep_dir,3'd0,ep})
         )
     )
@@ -47,8 +47,8 @@ task reqstd_clrfeat;
     $display("%0d vs %0d.",b_request,CLEAR_FEATURE);
     $display("%0d vs %0d.",w_length,feature);
     $display("%0d vs %0d.",w_index,
-            (type==DEVICE ? 0 : 
-            type==INTERFACE ? {8'd0,iface} : 
+            (type==DEVICE ? 0 :
+            type==INTERFACE ? {8'd0,iface} :
             {8'd0,ep_dir,3'd0,ep})
             );
     $finish;
@@ -58,7 +58,7 @@ task reqstd_clrfeat;
   if(status==ACK)
     begin
     trsac_in.ep=0;
-    trsac_in.data_size=0;
+    trsac_in.pack_size=0;
     trsac_in.buffer_ptr=0;
     trsac_in.handshake=ACK;
     trsac_in;
@@ -69,11 +69,10 @@ task reqstd_clrfeat;
   else if(status==STALL)
     begin
     trsac_in.ep=0;
-    trsac_in.data_size=0;
+    trsac_in.pack_size=0;
     trsac_in.buffer_ptr=0;
     trsac_in.handshake=STALL;
     trsac_in;
     end
   end
 endtask
-    

@@ -29,11 +29,11 @@ module tenv_clockgen  #(parameter clocks_number=2)
       wait(init[i]==1'b0 | init[i]==1'b1);
       clocks[i]=init[i];
       init_ended[i]=1'b1;
-      
+
       forever
         begin
         wait(en[i]==1'b1);
-        
+
         fork:loop
           forever
             begin
@@ -49,9 +49,9 @@ module tenv_clockgen  #(parameter clocks_number=2)
               clocks[i]=~clocks[i];
               #(time_high[((i+1)*32)-1:i*32]);
               end
-            clocks[i]=~clocks[i];  
+            clocks[i]=~clocks[i];
             end
-            
+
           begin
           wait(en[i]==1'b0);
           disable loop;
@@ -62,7 +62,7 @@ module tenv_clockgen  #(parameter clocks_number=2)
     //END COPY CODE
     end
   endgenerate
-  
+
   //VALIDATION INPUTS STATE
   initial
     begin
@@ -94,7 +94,7 @@ module tenv_clockgen  #(parameter clocks_number=2)
                   $realtime,index,en[index]);
           $finish;
           end
-        if( (init[index]===1'bz | init[index]===1'bx) & 
+        if( (init[index]===1'bz | init[index]===1'bx) &
             init_ended[index]==1'b0 )
           begin
           $display("%0t [clocks_generator]: Error - init[%0d] = %b",

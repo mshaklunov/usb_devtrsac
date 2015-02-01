@@ -6,7 +6,7 @@ task tcase_reply_delay;
   integer     packet_size;
   reg[3:0]    ep;
   integer     i;
-    
+
   begin
   $write("\n");
   $write("%0t [%0s]: ",$realtime,block_name);
@@ -20,8 +20,8 @@ task tcase_reply_delay;
   `tenv_usbdev.ep_intnoretry=15'b000_0000_0000_0000;
   @(posedge `tenv_clock.x4);
   `tenv_usbdev.ep_enable=15'b111_1111_1111_1111;
-  `tenv_usbdev.ep_isoch=15'b100_0000_0000_0000;  
-  
+  `tenv_usbdev.ep_isoch=15'b100_0000_0000_0000;
+
   //#1 BULK_IN WITH PACKET_SIZE=MAXIMUM RFIFO CAPACITY
   ep=1;
   data_size=130;
@@ -34,7 +34,7 @@ task tcase_reply_delay;
     `tenv_usbhost.trfer_bulk_in.packet_size=packet_size;
     `tenv_usbhost.trfer_bulk_in;
     end
-    
+
     begin
     `tenv_usbdev.trfer_in.ep=ep;
     `tenv_usbdev.trfer_in.data_size=data_size;
@@ -42,7 +42,7 @@ task tcase_reply_delay;
     `tenv_usbdev.trfer_in;
     end
   join
-  `tenv_usbhost.check_data(0,data_size);
+  check_data(0,data_size);
 
   //#2 BULK_OUT WITH PACKET_SIZE=MAXIMUM TFIFO CAPACITY
   ep=1;
@@ -56,7 +56,7 @@ task tcase_reply_delay;
     `tenv_usbhost.trfer_bulk_out.packet_size=packet_size;
     `tenv_usbhost.trfer_bulk_out;
     end
-    
+
     begin
     `tenv_usbdev.trfer_out.ep=ep;
     `tenv_usbdev.trfer_out.data_size=data_size;
@@ -64,8 +64,8 @@ task tcase_reply_delay;
     `tenv_usbdev.trfer_out;
     end
   join
-  `tenv_usbdev.check_data(0,data_size);  
-  
+  check_data(0,data_size);
+
   //#3 ISOCH_IN WITH PACKET_SIZE=MAXIMUM RFIFO CAPACITY
   ep=15;
   data_size=133;
@@ -78,7 +78,7 @@ task tcase_reply_delay;
     `tenv_usbhost.trfer_isoch_in.packet_size=packet_size;
     `tenv_usbhost.trfer_isoch_in;
     end
-    
+
     begin
     `tenv_usbdev.trfer_in.ep=ep;
     `tenv_usbdev.trfer_in.data_size=data_size;
@@ -86,7 +86,7 @@ task tcase_reply_delay;
     `tenv_usbdev.trfer_in;
     end
   join
-  `tenv_usbhost.check_data(0,data_size);  
+  check_data(0,data_size);
 
   //#4 ISOCH_OUT WITH PACKET_SIZE=MAXIMUM TFIFO CAPACITY
   ep=15;
@@ -100,7 +100,7 @@ task tcase_reply_delay;
     `tenv_usbhost.trfer_isoch_out.packet_size=packet_size;
     `tenv_usbhost.trfer_isoch_out;
     end
-    
+
     begin
     `tenv_usbdev.trfer_out.ep=ep;
     `tenv_usbdev.trfer_out.data_size=data_size;
@@ -108,9 +108,9 @@ task tcase_reply_delay;
     `tenv_usbdev.trfer_out;
     end
   join
-  `tenv_usbdev.check_data(0,data_size);
+  check_data(0,data_size);
 
-  `tenv_usbdev.reply_delay=0;  
+  `tenv_usbdev.reply_delay=0;
   `tenv_usbdev.ep_isoch=15'h0000;
   end
-endtask 
+endtask

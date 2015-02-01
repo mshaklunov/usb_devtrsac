@@ -10,14 +10,14 @@ task reqstd_getdesc;
   reg[7:0]      index;
   reg[15:0]     langid;
   integer       packet_size;
-  //LOCAL   
+  //LOCAL
   localparam    block_name="tenv_usbdev/reqstd_getdesc";
   integer       i;
 
   begin
   //SETUP STAGE
   trsac_setup.ep=0;
-  trsac_setup.data_size=8;
+  trsac_setup.pack_size=8;
   trsac_setup.buffer_ptr=0;
   trsac_setup.handshake=ACK;
   trsac_setup;
@@ -28,8 +28,8 @@ task reqstd_getdesc;
   w_index={buffer[5],buffer[4]};
   w_length={buffer[7],buffer[6]};
   //DATA STAGE
-  if(bm_request_type==8'b0000_0001 &
-    b_request==GET_DESCRIPTOR & 
+  if(bm_request_type==8'b1000_0000 &
+    b_request==GET_DESCRIPTOR &
     w_value[15:0]=={type,index} &
     w_index[15:0]==langid
     )
@@ -40,10 +40,10 @@ task reqstd_getdesc;
       buffer[i]=`tenv_descstd_device.data_bybyte[i];
       i=i+1;
       end
-    `tenv_usbdev.trfer_in.ep=0;
-    `tenv_usbdev.trfer_in.data_size=(w_length<18 ? w_length : 18);
-    `tenv_usbdev.trfer_in.packet_size=packet_size;
-    `tenv_usbdev.trfer_in;
+    trfer_in.ep=0;
+    trfer_in.data_size=(w_length<18 ? w_length : 18);
+    trfer_in.packet_size=packet_size;
+    trfer_in;
     end
   else
     begin
@@ -54,10 +54,9 @@ task reqstd_getdesc;
     end
   //STATUS STAGE
   trsac_out.ep=0;
-  trsac_out.data_size=0;
+  trsac_out.pack_size=0;
   trsac_out.buffer_ptr=0;
   trsac_out.handshake=ACK;
   trsac_out;
   end
 endtask
-    

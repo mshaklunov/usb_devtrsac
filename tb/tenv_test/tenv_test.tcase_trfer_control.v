@@ -7,7 +7,7 @@ task tcase_trfer_control;
   reg[3:0]    ep;
   reg[3:0]    ep_intlvd;
   integer     i,j,k;
-    
+
   begin
   $write("\n");
   $write("%0t [%0s]: ",$realtime,block_name);
@@ -26,99 +26,99 @@ task tcase_trfer_control;
     $write("%0t [%0s]: ",$realtime,block_name);
     $display("# ControlIn(ep=%0d) with interleaved TransactionIn(ep=%0d)",
             ep,ep_intlvd);
-    
+
     //SETUP STAGE
     `tenv_usbhost.toggle_bit[ep]=0;
     `tenv_usbhost.gen_data(i,8);
     `tenv_usbhost.trsac_setup.ep=ep;
-    `tenv_usbhost.trsac_setup.data_size=8;
+    `tenv_usbhost.trsac_setup.pack_size=8;
     `tenv_usbhost.trsac_setup.buffer_ptr=i;
-    `tenv_usbhost.trsac_setup.handshake=`tenv_usbhost.ACK;
+    `tenv_usbhost.trsac_setup.mode=`tenv_usbhost.HSK_ACK;
     `tenv_usbhost.trsac_setup;
     `tenv_usbhost.toggle_bit[ep]=~`tenv_usbhost.toggle_bit[ep];
     i=i+8;
 
-    //INTERLEAVED TRANSACTION    
+    //INTERLEAVED TRANSACTION
     if(k==0)
       begin
       `tenv_usbhost.trsac_in.ep=ep_intlvd;
-      `tenv_usbhost.trsac_in.data_size=packet_size;
+      `tenv_usbhost.trsac_in.pack_size=packet_size;
       `tenv_usbhost.trsac_in.buffer_ptr=i;
-      `tenv_usbhost.trsac_in.handshake=`tenv_usbhost.ACK;
+      `tenv_usbhost.trsac_in.mode=`tenv_usbhost.HSK_ACK;
       `tenv_usbhost.trsac_in;
       `tenv_usbhost.toggle_bit[ep_intlvd]=
-                                       ~`tenv_usbhost.toggle_bit[ep_intlvd];
-      `tenv_usbhost.check_data(i,packet_size);
-      i=i+`tenv_usbhost.trsac_in.data_size;
+                                     ~`tenv_usbhost.toggle_bit[ep_intlvd];
+      check_data(i,packet_size);
+      i=i+`tenv_usbhost.trsac_in.pack_size;
       end
-    
+
     //DATA STAGE
     `tenv_usbhost.trsac_in.ep=ep;
-    `tenv_usbhost.trsac_in.data_size=packet_size;
+    `tenv_usbhost.trsac_in.pack_size=packet_size;
     `tenv_usbhost.trsac_in.buffer_ptr=i;
-    `tenv_usbhost.trsac_in.handshake=`tenv_usbhost.ACK;
+    `tenv_usbhost.trsac_in.mode=`tenv_usbhost.HSK_ACK;
     `tenv_usbhost.trsac_in;
     `tenv_usbhost.toggle_bit[ep]=~`tenv_usbhost.toggle_bit[ep];
-    `tenv_usbhost.check_data(i,packet_size);
-    i=i+`tenv_usbhost.trsac_in.data_size;
+    check_data(i,packet_size);
+    i=i+`tenv_usbhost.trsac_in.pack_size;
 
-    //INTERLEAVED TRANSACTION    
+    //INTERLEAVED TRANSACTION
     if(k==1)
       begin
       `tenv_usbhost.trsac_in.ep=ep_intlvd;
-      `tenv_usbhost.trsac_in.data_size=packet_size;
+      `tenv_usbhost.trsac_in.pack_size=packet_size;
       `tenv_usbhost.trsac_in.buffer_ptr=i;
-      `tenv_usbhost.trsac_in.handshake=`tenv_usbhost.ACK;
+      `tenv_usbhost.trsac_in.mode=`tenv_usbhost.HSK_ACK;
       `tenv_usbhost.trsac_in;
       `tenv_usbhost.toggle_bit[ep_intlvd]=
                                      ~`tenv_usbhost.toggle_bit[ep_intlvd];
-      `tenv_usbhost.check_data(i,packet_size);
-      i=i+`tenv_usbhost.trsac_in.data_size;
+      check_data(i,packet_size);
+      i=i+`tenv_usbhost.trsac_in.pack_size;
       end
-   
+
     `tenv_usbhost.trsac_in.ep=ep;
-    `tenv_usbhost.trsac_in.data_size=packet_size;
+    `tenv_usbhost.trsac_in.pack_size=packet_size;
     `tenv_usbhost.trsac_in.buffer_ptr=i;
-    `tenv_usbhost.trsac_in.handshake=`tenv_usbhost.ACK;
+    `tenv_usbhost.trsac_in.mode=`tenv_usbhost.HSK_ACK;
     `tenv_usbhost.trsac_in;
     `tenv_usbhost.toggle_bit[ep]=~`tenv_usbhost.toggle_bit[ep];
-    `tenv_usbhost.check_data(i,packet_size);
-    i=i+`tenv_usbhost.trsac_in.data_size;
+    check_data(i,packet_size);
+    i=i+`tenv_usbhost.trsac_in.pack_size;
 
-    //INTERLEAVED TRANSACTION    
+    //INTERLEAVED TRANSACTION
     if(k==2)
       begin
       `tenv_usbhost.trsac_in.ep=ep_intlvd;
-      `tenv_usbhost.trsac_in.data_size=packet_size;
+      `tenv_usbhost.trsac_in.pack_size=packet_size;
       `tenv_usbhost.trsac_in.buffer_ptr=i;
-      `tenv_usbhost.trsac_in.handshake=`tenv_usbhost.ACK;
+      `tenv_usbhost.trsac_in.mode=`tenv_usbhost.HSK_ACK;
       `tenv_usbhost.trsac_in;
       `tenv_usbhost.toggle_bit[ep_intlvd]=
                                      ~`tenv_usbhost.toggle_bit[ep_intlvd];
-      `tenv_usbhost.check_data(i,packet_size);
-      i=i+`tenv_usbhost.trsac_in.data_size;
-      end    
-    
+      check_data(i,packet_size);
+      i=i+`tenv_usbhost.trsac_in.pack_size;
+      end
+
     //STATUS STAGE
     `tenv_usbhost.toggle_bit[ep]=1;
     `tenv_usbhost.trsac_out.ep=ep;
-    `tenv_usbhost.trsac_out.data_size=0;
+    `tenv_usbhost.trsac_out.pack_size=0;
     `tenv_usbhost.trsac_out.buffer_ptr=i;
-    `tenv_usbhost.trsac_out.handshake=`tenv_usbhost.ACK;
+    `tenv_usbhost.trsac_out.mode=`tenv_usbhost.HSK_ACK;
     `tenv_usbhost.trsac_out;
-    i=i+`tenv_usbhost.trsac_out.data_size;
-    
+    i=i+`tenv_usbhost.trsac_out.pack_size;
+
     k=k+1;
     end
-    
+
     begin
     //SETUP STAGE
     `tenv_usbdev.trsac_setup.ep=ep;
     `tenv_usbdev.trsac_setup.buffer_ptr=j;
-    `tenv_usbdev.trsac_setup.data_size=8;
+    `tenv_usbdev.trsac_setup.pack_size=8;
     `tenv_usbdev.trsac_setup.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_setup;
-    `tenv_usbdev.check_data(j,8);
+    check_data(j,8);
     j=j+8;
 
     //INTERLEAVED TRANSACTION
@@ -126,62 +126,62 @@ task tcase_trfer_control;
       begin
       `tenv_usbdev.gen_data(j,packet_size);
       `tenv_usbdev.trsac_in.ep=ep_intlvd;
-      `tenv_usbdev.trsac_in.data_size=packet_size;
+      `tenv_usbdev.trsac_in.pack_size=packet_size;
       `tenv_usbdev.trsac_in.buffer_ptr=j;
       `tenv_usbdev.trsac_in.handshake=`tenv_usbdev.ACK;
       `tenv_usbdev.trsac_in;
-      j=j+`tenv_usbdev.trsac_in.data_size;
+      j=j+`tenv_usbdev.trsac_in.pack_size;
       end
-      
+
     //DATA STAGE
     `tenv_usbdev.gen_data(j,packet_size);
     `tenv_usbdev.trsac_in.ep=ep;
-    `tenv_usbdev.trsac_in.data_size=packet_size;
+    `tenv_usbdev.trsac_in.pack_size=packet_size;
     `tenv_usbdev.trsac_in.buffer_ptr=j;
     `tenv_usbdev.trsac_in.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_in;
-    j=j+`tenv_usbdev.trsac_in.data_size;
+    j=j+`tenv_usbdev.trsac_in.pack_size;
 
     //INTERLEAVED TRANSACTION
     if(k==1)
       begin
       `tenv_usbdev.gen_data(j,packet_size);
       `tenv_usbdev.trsac_in.ep=ep_intlvd;
-      `tenv_usbdev.trsac_in.data_size=packet_size;
+      `tenv_usbdev.trsac_in.pack_size=packet_size;
       `tenv_usbdev.trsac_in.buffer_ptr=j;
       `tenv_usbdev.trsac_in.handshake=`tenv_usbdev.ACK;
       `tenv_usbdev.trsac_in;
-      j=j+`tenv_usbdev.trsac_in.data_size;
+      j=j+`tenv_usbdev.trsac_in.pack_size;
       end
-    
+
     `tenv_usbdev.gen_data(j,packet_size);
     `tenv_usbdev.trsac_in.ep=ep;
-    `tenv_usbdev.trsac_in.data_size=packet_size;
+    `tenv_usbdev.trsac_in.pack_size=packet_size;
     `tenv_usbdev.trsac_in.buffer_ptr=j;
     `tenv_usbdev.trsac_in.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_in;
-    j=j+`tenv_usbdev.trsac_in.data_size;
- 
+    j=j+`tenv_usbdev.trsac_in.pack_size;
+
     //INTERLEAVED TRANSACTION
     if(k==2)
       begin
       `tenv_usbdev.gen_data(j,packet_size);
       `tenv_usbdev.trsac_in.ep=ep_intlvd;
-      `tenv_usbdev.trsac_in.data_size=packet_size;
+      `tenv_usbdev.trsac_in.pack_size=packet_size;
       `tenv_usbdev.trsac_in.buffer_ptr=j;
       `tenv_usbdev.trsac_in.handshake=`tenv_usbdev.ACK;
       `tenv_usbdev.trsac_in;
-      j=j+`tenv_usbdev.trsac_in.data_size;
+      j=j+`tenv_usbdev.trsac_in.pack_size;
       end
- 
+
     //STATUS STAGE
     `tenv_usbdev.trsac_out.ep=ep;
-    `tenv_usbdev.trsac_out.data_size=0;
+    `tenv_usbdev.trsac_out.pack_size=0;
     `tenv_usbdev.trsac_out.buffer_ptr=j;
     `tenv_usbdev.trsac_out.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_out;
-    `tenv_usbdev.check_data(j,0);
-    j=j+`tenv_usbdev.trsac_out.data_size;
+    check_data(j,0);
+    j=j+`tenv_usbdev.trsac_out.pack_size;
     end
     join
 
@@ -198,165 +198,165 @@ task tcase_trfer_control;
     $write("%0t [%0s]: ",$realtime,block_name);
     $display("# ControlIn(ep=%0d) with interleaved TransactionOut(ep=%0d)"
             ,ep,ep_intlvd);
-    
+
     //SETUP STAGE
     `tenv_usbhost.toggle_bit[ep]=0;
     `tenv_usbhost.gen_data(i,8);
     `tenv_usbhost.trsac_setup.ep=ep;
-    `tenv_usbhost.trsac_setup.data_size=8;
+    `tenv_usbhost.trsac_setup.pack_size=8;
     `tenv_usbhost.trsac_setup.buffer_ptr=i;
-    `tenv_usbhost.trsac_setup.handshake=`tenv_usbhost.ACK;
+    `tenv_usbhost.trsac_setup.mode=`tenv_usbhost.HSK_ACK;
     `tenv_usbhost.trsac_setup;
     `tenv_usbhost.toggle_bit[ep]=~`tenv_usbhost.toggle_bit[ep];
     i=i+8;
 
-    //INTERLEAVED TRANSACTION    
+    //INTERLEAVED TRANSACTION
     if(k==0)
       begin
       `tenv_usbhost.gen_data(i,packet_size);
       `tenv_usbhost.trsac_out.ep=ep_intlvd;
-      `tenv_usbhost.trsac_out.data_size=packet_size;
+      `tenv_usbhost.trsac_out.pack_size=packet_size;
       `tenv_usbhost.trsac_out.buffer_ptr=i;
-      `tenv_usbhost.trsac_out.handshake=`tenv_usbhost.ACK;
+      `tenv_usbhost.trsac_out.mode=`tenv_usbhost.HSK_ACK;
       `tenv_usbhost.trsac_out;
       `tenv_usbhost.toggle_bit[ep_intlvd]=
                                      ~`tenv_usbhost.toggle_bit[ep_intlvd];
-      i=i+`tenv_usbhost.trsac_out.data_size;
+      i=i+`tenv_usbhost.trsac_out.pack_size;
       end
-    
+
     //DATA STAGE
     `tenv_usbhost.trsac_in.ep=ep;
-    `tenv_usbhost.trsac_in.data_size=packet_size;
+    `tenv_usbhost.trsac_in.pack_size=packet_size;
     `tenv_usbhost.trsac_in.buffer_ptr=i;
-    `tenv_usbhost.trsac_in.handshake=`tenv_usbhost.ACK;
+    `tenv_usbhost.trsac_in.mode=`tenv_usbhost.HSK_ACK;
     `tenv_usbhost.trsac_in;
     `tenv_usbhost.toggle_bit[ep]=~`tenv_usbhost.toggle_bit[ep];
-    `tenv_usbhost.check_data(i,packet_size);
-    i=i+`tenv_usbhost.trsac_in.data_size;
+    check_data(i,packet_size);
+    i=i+`tenv_usbhost.trsac_in.pack_size;
 
-    //INTERLEAVED TRANSACTION    
+    //INTERLEAVED TRANSACTION
     if(k==1)
       begin
       `tenv_usbhost.gen_data(i,packet_size);
       `tenv_usbhost.trsac_out.ep=ep_intlvd;
-      `tenv_usbhost.trsac_out.data_size=packet_size;
+      `tenv_usbhost.trsac_out.pack_size=packet_size;
       `tenv_usbhost.trsac_out.buffer_ptr=i;
-      `tenv_usbhost.trsac_out.handshake=`tenv_usbhost.ACK;
+      `tenv_usbhost.trsac_out.mode=`tenv_usbhost.HSK_ACK;
       `tenv_usbhost.trsac_out;
       `tenv_usbhost.toggle_bit[ep_intlvd]=
                                      ~`tenv_usbhost.toggle_bit[ep_intlvd];
-      i=i+`tenv_usbhost.trsac_out.data_size;
+      i=i+`tenv_usbhost.trsac_out.pack_size;
       end
-   
+
     `tenv_usbhost.trsac_in.ep=ep;
-    `tenv_usbhost.trsac_in.data_size=packet_size;
+    `tenv_usbhost.trsac_in.pack_size=packet_size;
     `tenv_usbhost.trsac_in.buffer_ptr=i;
-    `tenv_usbhost.trsac_in.handshake=`tenv_usbhost.ACK;
+    `tenv_usbhost.trsac_in.mode=`tenv_usbhost.HSK_ACK;
     `tenv_usbhost.trsac_in;
     `tenv_usbhost.toggle_bit[ep]=~`tenv_usbhost.toggle_bit[ep];
-    `tenv_usbhost.check_data(i,packet_size);
-    i=i+`tenv_usbhost.trsac_in.data_size;
+    check_data(i,packet_size);
+    i=i+`tenv_usbhost.trsac_in.pack_size;
 
-    //INTERLEAVED TRANSACTION    
+    //INTERLEAVED TRANSACTION
     if(k==2)
       begin
       `tenv_usbhost.gen_data(i,packet_size);
       `tenv_usbhost.trsac_out.ep=ep_intlvd;
-      `tenv_usbhost.trsac_out.data_size=packet_size;
+      `tenv_usbhost.trsac_out.pack_size=packet_size;
       `tenv_usbhost.trsac_out.buffer_ptr=i;
-      `tenv_usbhost.trsac_out.handshake=`tenv_usbhost.ACK;
+      `tenv_usbhost.trsac_out.mode=`tenv_usbhost.HSK_ACK;
       `tenv_usbhost.trsac_out;
       `tenv_usbhost.toggle_bit[ep_intlvd]=
                                      ~`tenv_usbhost.toggle_bit[ep_intlvd];
-      i=i+`tenv_usbhost.trsac_out.data_size;
-      end    
-    
+      i=i+`tenv_usbhost.trsac_out.pack_size;
+      end
+
     //STATUS STAGE
     `tenv_usbhost.toggle_bit[ep]=1;
     `tenv_usbhost.trsac_out.ep=ep;
-    `tenv_usbhost.trsac_out.data_size=0;
+    `tenv_usbhost.trsac_out.pack_size=0;
     `tenv_usbhost.trsac_out.buffer_ptr=i;
-    `tenv_usbhost.trsac_out.handshake=`tenv_usbhost.ACK;
+    `tenv_usbhost.trsac_out.mode=`tenv_usbhost.HSK_ACK;
     `tenv_usbhost.trsac_out;
-    i=i+`tenv_usbhost.trsac_out.data_size;
-    
+    i=i+`tenv_usbhost.trsac_out.pack_size;
+
     k=k+1;
     end
-    
+
     begin
     //SETUP STAGE
     `tenv_usbdev.trsac_setup.ep=ep;
     `tenv_usbdev.trsac_setup.buffer_ptr=j;
-    `tenv_usbdev.trsac_setup.data_size=8;
+    `tenv_usbdev.trsac_setup.pack_size=8;
     `tenv_usbdev.trsac_setup.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_setup;
-    `tenv_usbdev.check_data(j,8);
+    check_data(j,8);
     j=j+8;
 
     //INTERLEAVED TRANSACTION
     if(k==0)
       begin
       `tenv_usbdev.trsac_out.ep=ep_intlvd;
-      `tenv_usbdev.trsac_out.data_size=packet_size;
+      `tenv_usbdev.trsac_out.pack_size=packet_size;
       `tenv_usbdev.trsac_out.buffer_ptr=j;
       `tenv_usbdev.trsac_out.handshake=`tenv_usbdev.ACK;
       `tenv_usbdev.trsac_out;
-      j=j+`tenv_usbdev.trsac_out.data_size;
-      `tenv_usbdev.check_data(j,packet_size);
+      j=j+`tenv_usbdev.trsac_out.pack_size;
+      check_data(j,packet_size);
       end
-      
+
     //DATA STAGE
     `tenv_usbdev.gen_data(j,packet_size);
     `tenv_usbdev.trsac_in.ep=ep;
-    `tenv_usbdev.trsac_in.data_size=packet_size;
+    `tenv_usbdev.trsac_in.pack_size=packet_size;
     `tenv_usbdev.trsac_in.buffer_ptr=j;
     `tenv_usbdev.trsac_in.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_in;
-    j=j+`tenv_usbdev.trsac_in.data_size;
+    j=j+`tenv_usbdev.trsac_in.pack_size;
 
     //INTERLEAVED TRANSACTION
     if(k==1)
       begin
       `tenv_usbdev.gen_data(j,packet_size);
       `tenv_usbdev.trsac_out.ep=ep_intlvd;
-      `tenv_usbdev.trsac_out.data_size=packet_size;
+      `tenv_usbdev.trsac_out.pack_size=packet_size;
       `tenv_usbdev.trsac_out.buffer_ptr=j;
       `tenv_usbdev.trsac_out.handshake=`tenv_usbdev.ACK;
       `tenv_usbdev.trsac_out;
-      j=j+`tenv_usbdev.trsac_out.data_size;
+      j=j+`tenv_usbdev.trsac_out.pack_size;
       end
-    
+
     `tenv_usbdev.gen_data(j,packet_size);
     `tenv_usbdev.trsac_in.ep=ep;
-    `tenv_usbdev.trsac_in.data_size=packet_size;
+    `tenv_usbdev.trsac_in.pack_size=packet_size;
     `tenv_usbdev.trsac_in.buffer_ptr=j;
     `tenv_usbdev.trsac_in.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_in;
-    j=j+`tenv_usbdev.trsac_in.data_size;
- 
+    j=j+`tenv_usbdev.trsac_in.pack_size;
+
     //INTERLEAVED TRANSACTION
     if(k==2)
       begin
       `tenv_usbdev.gen_data(j,packet_size);
       `tenv_usbdev.trsac_out.ep=ep_intlvd;
-      `tenv_usbdev.trsac_out.data_size=packet_size;
+      `tenv_usbdev.trsac_out.pack_size=packet_size;
       `tenv_usbdev.trsac_out.buffer_ptr=j;
       `tenv_usbdev.trsac_out.handshake=`tenv_usbdev.ACK;
       `tenv_usbdev.trsac_out;
-      j=j+`tenv_usbdev.trsac_out.data_size;
+      j=j+`tenv_usbdev.trsac_out.pack_size;
       end
-      
+
     //STATUS STAGE
     `tenv_usbdev.trsac_out.ep=ep;
-    `tenv_usbdev.trsac_out.data_size=0;
+    `tenv_usbdev.trsac_out.pack_size=0;
     `tenv_usbdev.trsac_out.buffer_ptr=j;
     `tenv_usbdev.trsac_out.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_out;
-    `tenv_usbdev.check_data(j,0);
-    j=j+`tenv_usbdev.trsac_out.data_size;
+    check_data(j,0);
+    j=j+`tenv_usbdev.trsac_out.pack_size;
     end
     join
-  
+
   //#3 CONTROL_IN ITERRUPTED BY OTHER CONTROL
   ep=4'b0101;
   packet_size=3;
@@ -367,41 +367,41 @@ task tcase_trfer_control;
     fork
     begin
     $write("%0t [%0s]: ",$realtime,block_name);
-    $display("# ControlIn(ep=%0d) iterrupted by other Control",ep);  
+    $display("# ControlIn(ep=%0d) iterrupted by other Control",ep);
     //SETUP STAGE
     `tenv_usbhost.toggle_bit[ep]=0;
     `tenv_usbhost.gen_data(i,8);
     `tenv_usbhost.trsac_setup.ep=ep;
-    `tenv_usbhost.trsac_setup.data_size=8;
+    `tenv_usbhost.trsac_setup.pack_size=8;
     `tenv_usbhost.trsac_setup.buffer_ptr=i;
-    `tenv_usbhost.trsac_setup.handshake=`tenv_usbhost.ACK;
+    `tenv_usbhost.trsac_setup.mode=`tenv_usbhost.HSK_ACK;
     `tenv_usbhost.trsac_setup;
     `tenv_usbhost.toggle_bit[ep]=~`tenv_usbhost.toggle_bit[ep];
-    i=i+`tenv_usbhost.trsac_setup.data_size;
-    
+    i=i+`tenv_usbhost.trsac_setup.pack_size;
+
     if(k==0)
       begin
       //SETUP STAGE
       `tenv_usbhost.toggle_bit[ep]=0;
       `tenv_usbhost.gen_data(i,8);
       `tenv_usbhost.trsac_setup.ep=ep;
-      `tenv_usbhost.trsac_setup.data_size=8;
+      `tenv_usbhost.trsac_setup.pack_size=8;
       `tenv_usbhost.trsac_setup.buffer_ptr=i;
-      `tenv_usbhost.trsac_setup.handshake=`tenv_usbhost.ACK;
+      `tenv_usbhost.trsac_setup.mode=`tenv_usbhost.HSK_ACK;
       `tenv_usbhost.trsac_setup;
       `tenv_usbhost.toggle_bit[ep]=~`tenv_usbhost.toggle_bit[ep];
       i=i+8;
       end
-      
+
     //DATA STAGE
     `tenv_usbhost.trsac_in.ep=ep;
-    `tenv_usbhost.trsac_in.data_size=packet_size;
+    `tenv_usbhost.trsac_in.pack_size=packet_size;
     `tenv_usbhost.trsac_in.buffer_ptr=i;
-    `tenv_usbhost.trsac_in.handshake=`tenv_usbhost.ACK;
+    `tenv_usbhost.trsac_in.mode=`tenv_usbhost.HSK_ACK;
     `tenv_usbhost.trsac_in;
     `tenv_usbhost.toggle_bit[ep]=~`tenv_usbhost.toggle_bit[ep];
-    `tenv_usbhost.check_data(i,packet_size);
-    i=i+`tenv_usbhost.trsac_in.data_size;
+    check_data(i,packet_size);
+    i=i+`tenv_usbhost.trsac_in.pack_size;
 
     if(k==1)
       begin
@@ -409,23 +409,23 @@ task tcase_trfer_control;
       `tenv_usbhost.toggle_bit[ep]=0;
       `tenv_usbhost.gen_data(i,8);
       `tenv_usbhost.trsac_setup.ep=ep;
-      `tenv_usbhost.trsac_setup.data_size=8;
+      `tenv_usbhost.trsac_setup.pack_size=8;
       `tenv_usbhost.trsac_setup.buffer_ptr=i;
-      `tenv_usbhost.trsac_setup.handshake=`tenv_usbhost.ACK;
+      `tenv_usbhost.trsac_setup.mode=`tenv_usbhost.HSK_ACK;
       `tenv_usbhost.trsac_setup;
       `tenv_usbhost.toggle_bit[ep]=~`tenv_usbhost.toggle_bit[ep];
       i=i+8;
       end
-    
+
     //DATA STAGE
     `tenv_usbhost.trsac_in.ep=ep;
-    `tenv_usbhost.trsac_in.data_size=packet_size;
+    `tenv_usbhost.trsac_in.pack_size=packet_size;
     `tenv_usbhost.trsac_in.buffer_ptr=i;
-    `tenv_usbhost.trsac_in.handshake=`tenv_usbhost.ACK;
+    `tenv_usbhost.trsac_in.mode=`tenv_usbhost.HSK_ACK;
     `tenv_usbhost.trsac_in;
     `tenv_usbhost.toggle_bit[ep]=~`tenv_usbhost.toggle_bit[ep];
-    `tenv_usbhost.check_data(i,packet_size);
-    i=i+`tenv_usbhost.trsac_in.data_size;
+    check_data(i,packet_size);
+    i=i+`tenv_usbhost.trsac_in.pack_size;
 
     if(k==2)
       begin
@@ -433,116 +433,116 @@ task tcase_trfer_control;
       `tenv_usbhost.toggle_bit[ep]=0;
       `tenv_usbhost.gen_data(i,8);
       `tenv_usbhost.trsac_setup.ep=ep;
-      `tenv_usbhost.trsac_setup.data_size=8;
+      `tenv_usbhost.trsac_setup.pack_size=8;
       `tenv_usbhost.trsac_setup.buffer_ptr=i;
-      `tenv_usbhost.trsac_setup.handshake=`tenv_usbhost.ACK;
+      `tenv_usbhost.trsac_setup.mode=`tenv_usbhost.HSK_ACK;
       `tenv_usbhost.trsac_setup;
       `tenv_usbhost.toggle_bit[ep]=~`tenv_usbhost.toggle_bit[ep];
       i=i+8;
-      
+
       //DATA STAGE
       `tenv_usbhost.trsac_in.ep=ep;
-      `tenv_usbhost.trsac_in.data_size=packet_size;
+      `tenv_usbhost.trsac_in.pack_size=packet_size;
       `tenv_usbhost.trsac_in.buffer_ptr=i;
-      `tenv_usbhost.trsac_in.handshake=`tenv_usbhost.ACK;
+      `tenv_usbhost.trsac_in.mode=`tenv_usbhost.HSK_ACK;
       `tenv_usbhost.trsac_in;
       `tenv_usbhost.toggle_bit[ep]=~`tenv_usbhost.toggle_bit[ep];
-      `tenv_usbhost.check_data(i,packet_size);
-      i=i+`tenv_usbhost.trsac_in.data_size;
+      check_data(i,packet_size);
+      i=i+`tenv_usbhost.trsac_in.pack_size;
       end
-    
+
     //STATUS STAGE
     `tenv_usbhost.toggle_bit[ep]=1;
     `tenv_usbhost.trsac_out.ep=ep;
-    `tenv_usbhost.trsac_out.data_size=0;
+    `tenv_usbhost.trsac_out.pack_size=0;
     `tenv_usbhost.trsac_out.buffer_ptr=i;
-    `tenv_usbhost.trsac_out.handshake=`tenv_usbhost.ACK;
+    `tenv_usbhost.trsac_out.mode=`tenv_usbhost.HSK_ACK;
     `tenv_usbhost.trsac_out;
-    i=i+`tenv_usbhost.trsac_out.data_size;
+    i=i+`tenv_usbhost.trsac_out.pack_size;
     k=k+1;
     end
-    
+
     begin
     //SETUP STAGE
     `tenv_usbdev.trsac_setup.ep=ep;
     `tenv_usbdev.trsac_setup.buffer_ptr=j;
-    `tenv_usbdev.trsac_setup.data_size=8;
+    `tenv_usbdev.trsac_setup.pack_size=8;
     `tenv_usbdev.trsac_setup.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_setup;
-    `tenv_usbdev.check_data(j,8);
-    j=j+`tenv_usbdev.trsac_setup.data_size;
+    check_data(j,8);
+    j=j+`tenv_usbdev.trsac_setup.pack_size;
 
     if(k==0)
       begin
       //SETUP STAGE
       `tenv_usbdev.trsac_setup.ep=ep;
       `tenv_usbdev.trsac_setup.buffer_ptr=j;
-      `tenv_usbdev.trsac_setup.data_size=8;
+      `tenv_usbdev.trsac_setup.pack_size=8;
       `tenv_usbdev.trsac_setup.handshake=`tenv_usbdev.ACK;
       `tenv_usbdev.trsac_setup;
-      `tenv_usbdev.check_data(j,8);
+      check_data(j,8);
       j=j+8;
-      end    
-    
+      end
+
     //DATA STAGE
     `tenv_usbdev.gen_data(j,packet_size);
     `tenv_usbdev.trsac_in.ep=ep;
-    `tenv_usbdev.trsac_in.data_size=packet_size;
+    `tenv_usbdev.trsac_in.pack_size=packet_size;
     `tenv_usbdev.trsac_in.buffer_ptr=j;
     `tenv_usbdev.trsac_in.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_in;
-    j=j+`tenv_usbdev.trsac_in.data_size;
+    j=j+`tenv_usbdev.trsac_in.pack_size;
 
     if(k==1)
       begin
       //SETUP STAGE
       `tenv_usbdev.trsac_setup.ep=ep;
       `tenv_usbdev.trsac_setup.buffer_ptr=j;
-      `tenv_usbdev.trsac_setup.data_size=8;
+      `tenv_usbdev.trsac_setup.pack_size=8;
       `tenv_usbdev.trsac_setup.handshake=`tenv_usbdev.ACK;
       `tenv_usbdev.trsac_setup;
-      `tenv_usbdev.check_data(j,8);
+      check_data(j,8);
       j=j+8;
-      end    
-     
+      end
+
     //DATA STAGE
     `tenv_usbdev.gen_data(j,packet_size);
     `tenv_usbdev.trsac_in.ep=ep;
-    `tenv_usbdev.trsac_in.data_size=packet_size;
+    `tenv_usbdev.trsac_in.pack_size=packet_size;
     `tenv_usbdev.trsac_in.buffer_ptr=j;
     `tenv_usbdev.trsac_in.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_in;
-    j=j+`tenv_usbdev.trsac_in.data_size;
+    j=j+`tenv_usbdev.trsac_in.pack_size;
 
     if(k==2)
       begin
       //SETUP STAGE
       `tenv_usbdev.trsac_setup.ep=ep;
       `tenv_usbdev.trsac_setup.buffer_ptr=j;
-      `tenv_usbdev.trsac_setup.data_size=8;
+      `tenv_usbdev.trsac_setup.pack_size=8;
       `tenv_usbdev.trsac_setup.handshake=`tenv_usbdev.ACK;
       `tenv_usbdev.trsac_setup;
-      `tenv_usbdev.check_data(j,8);
+      check_data(j,8);
       j=j+8;
-      
+
       //DATA STAGE
       `tenv_usbdev.gen_data(j,packet_size);
       `tenv_usbdev.trsac_in.ep=ep;
-      `tenv_usbdev.trsac_in.data_size=packet_size;
+      `tenv_usbdev.trsac_in.pack_size=packet_size;
       `tenv_usbdev.trsac_in.buffer_ptr=j;
       `tenv_usbdev.trsac_in.handshake=`tenv_usbdev.ACK;
       `tenv_usbdev.trsac_in;
-      j=j+`tenv_usbdev.trsac_in.data_size;
+      j=j+`tenv_usbdev.trsac_in.pack_size;
       end
-    
+
     //STATUS STAGE
     `tenv_usbdev.trsac_out.ep=ep;
-    `tenv_usbdev.trsac_out.data_size=0;
+    `tenv_usbdev.trsac_out.pack_size=0;
     `tenv_usbdev.trsac_out.buffer_ptr=j;
     `tenv_usbdev.trsac_out.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_out;
-    `tenv_usbdev.check_data(j,0);
-    j=j+`tenv_usbdev.trsac_out.data_size;
+    check_data(j,0);
+    j=j+`tenv_usbdev.trsac_out.pack_size;
     end
     join
 
@@ -559,106 +559,106 @@ task tcase_trfer_control;
     $write("%0t [%0s]: ",$realtime,block_name);
     $display("# ControlIn(ep=%0d) with multiple Status Stages",
             ep);
-    
+
     //SETUP STAGE
     `tenv_usbhost.toggle_bit[ep]=0;
     `tenv_usbhost.gen_data(i,8);
     `tenv_usbhost.trsac_setup.ep=ep;
-    `tenv_usbhost.trsac_setup.data_size=8;
+    `tenv_usbhost.trsac_setup.pack_size=8;
     `tenv_usbhost.trsac_setup.buffer_ptr=i;
-    `tenv_usbhost.trsac_setup.handshake=`tenv_usbhost.ACK;
+    `tenv_usbhost.trsac_setup.mode=`tenv_usbhost.HSK_ACK;
     `tenv_usbhost.trsac_setup;
     `tenv_usbhost.toggle_bit[ep]=~`tenv_usbhost.toggle_bit[ep];
     i=i+8;
 
     //DATA STAGE
     `tenv_usbhost.trsac_in.ep=ep;
-    `tenv_usbhost.trsac_in.data_size=packet_size;
+    `tenv_usbhost.trsac_in.pack_size=packet_size;
     `tenv_usbhost.trsac_in.buffer_ptr=i;
-    `tenv_usbhost.trsac_in.handshake=`tenv_usbhost.ACK;
+    `tenv_usbhost.trsac_in.mode=`tenv_usbhost.HSK_ACK;
     `tenv_usbhost.trsac_in;
     `tenv_usbhost.toggle_bit[ep]=~`tenv_usbhost.toggle_bit[ep];
-    `tenv_usbhost.check_data(i,packet_size);
-    i=i+`tenv_usbhost.trsac_in.data_size;
-    
-    //STATUS STAGE
-    `tenv_usbhost.toggle_bit[ep]=1;
-    `tenv_usbhost.trsac_out.ep=ep;
-    `tenv_usbhost.trsac_out.data_size=0;
-    `tenv_usbhost.trsac_out.buffer_ptr=i;
-    `tenv_usbhost.trsac_out.handshake=`tenv_usbhost.ACK;
-    `tenv_usbhost.trsac_out;
-    i=i+`tenv_usbhost.trsac_out.data_size;
+    check_data(i,packet_size);
+    i=i+`tenv_usbhost.trsac_in.pack_size;
 
     //STATUS STAGE
     `tenv_usbhost.toggle_bit[ep]=1;
     `tenv_usbhost.trsac_out.ep=ep;
-    `tenv_usbhost.trsac_out.data_size=0;
+    `tenv_usbhost.trsac_out.pack_size=0;
     `tenv_usbhost.trsac_out.buffer_ptr=i;
-    `tenv_usbhost.trsac_out.handshake=`tenv_usbhost.ACK;
+    `tenv_usbhost.trsac_out.mode=`tenv_usbhost.HSK_ACK;
     `tenv_usbhost.trsac_out;
-    i=i+`tenv_usbhost.trsac_out.data_size;
- 
+    i=i+`tenv_usbhost.trsac_out.pack_size;
+
     //STATUS STAGE
     `tenv_usbhost.toggle_bit[ep]=1;
     `tenv_usbhost.trsac_out.ep=ep;
-    `tenv_usbhost.trsac_out.data_size=0;
+    `tenv_usbhost.trsac_out.pack_size=0;
     `tenv_usbhost.trsac_out.buffer_ptr=i;
-    `tenv_usbhost.trsac_out.handshake=`tenv_usbhost.ACK;
+    `tenv_usbhost.trsac_out.mode=`tenv_usbhost.HSK_ACK;
     `tenv_usbhost.trsac_out;
-    i=i+`tenv_usbhost.trsac_out.data_size;
-    
+    i=i+`tenv_usbhost.trsac_out.pack_size;
+
+    //STATUS STAGE
+    `tenv_usbhost.toggle_bit[ep]=1;
+    `tenv_usbhost.trsac_out.ep=ep;
+    `tenv_usbhost.trsac_out.pack_size=0;
+    `tenv_usbhost.trsac_out.buffer_ptr=i;
+    `tenv_usbhost.trsac_out.mode=`tenv_usbhost.HSK_ACK;
+    `tenv_usbhost.trsac_out;
+    i=i+`tenv_usbhost.trsac_out.pack_size;
+
     k=k+1;
     end
-    
+
     begin
     //SETUP STAGE
     `tenv_usbdev.trsac_setup.ep=ep;
     `tenv_usbdev.trsac_setup.buffer_ptr=j;
-    `tenv_usbdev.trsac_setup.data_size=8;
+    `tenv_usbdev.trsac_setup.pack_size=8;
     `tenv_usbdev.trsac_setup.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_setup;
-    `tenv_usbdev.check_data(j,8);
+    check_data(j,8);
     j=j+8;
 
     //DATA STAGE
     `tenv_usbdev.gen_data(j,packet_size);
     `tenv_usbdev.trsac_in.ep=ep;
-    `tenv_usbdev.trsac_in.data_size=packet_size;
+    `tenv_usbdev.trsac_in.pack_size=packet_size;
     `tenv_usbdev.trsac_in.buffer_ptr=j;
     `tenv_usbdev.trsac_in.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_in;
-    j=j+`tenv_usbdev.trsac_in.data_size;
-    
+    j=j+`tenv_usbdev.trsac_in.pack_size;
+
     //STATUS STAGE
     `tenv_usbdev.trsac_out.ep=ep;
-    `tenv_usbdev.trsac_out.data_size=0;
+    `tenv_usbdev.trsac_out.pack_size=0;
     `tenv_usbdev.trsac_out.buffer_ptr=j;
     `tenv_usbdev.trsac_out.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_out;
-    `tenv_usbdev.check_data(j,0);
-    j=j+`tenv_usbdev.trsac_out.data_size;
-    
+    check_data(j,0);
+    j=j+`tenv_usbdev.trsac_out.pack_size;
+
     //STATUS STAGE
     `tenv_usbdev.trsac_out.ep=ep;
-    `tenv_usbdev.trsac_out.data_size=0;
+    `tenv_usbdev.trsac_out.pack_size=0;
     `tenv_usbdev.trsac_out.buffer_ptr=j;
     `tenv_usbdev.trsac_out.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_out;
-    `tenv_usbdev.check_data(j,0);
-    j=j+`tenv_usbdev.trsac_out.data_size;
-    
+    check_data(j,0);
+    j=j+`tenv_usbdev.trsac_out.pack_size;
+
     //STATUS STAGE
     `tenv_usbdev.trsac_out.ep=ep;
-    `tenv_usbdev.trsac_out.data_size=0;
+    `tenv_usbdev.trsac_out.pack_size=0;
     `tenv_usbdev.trsac_out.buffer_ptr=j;
     `tenv_usbdev.trsac_out.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_out;
-    `tenv_usbdev.check_data(j,0);
-    j=j+`tenv_usbdev.trsac_out.data_size;
+    check_data(j,0);
+    j=j+`tenv_usbdev.trsac_out.pack_size;
     end
     join
-    
+
   //#5 CONTROL_OUT WITH INTERLEAVED TRANSACTION_IN
   ep=4'b0101;
   ep_intlvd=ep+1;
@@ -676,9 +676,9 @@ task tcase_trfer_control;
     `tenv_usbhost.toggle_bit[ep]=0;
     `tenv_usbhost.gen_data(i,8);
     `tenv_usbhost.trsac_setup.ep=ep;
-    `tenv_usbhost.trsac_setup.data_size=8;
+    `tenv_usbhost.trsac_setup.pack_size=8;
     `tenv_usbhost.trsac_setup.buffer_ptr=i;
-    `tenv_usbhost.trsac_setup.handshake=`tenv_usbhost.ACK;
+    `tenv_usbhost.trsac_setup.mode=`tenv_usbhost.HSK_ACK;
     `tenv_usbhost.trsac_setup;
     `tenv_usbhost.toggle_bit[ep]=~`tenv_usbhost.toggle_bit[ep];
     i=i+8;
@@ -686,134 +686,134 @@ task tcase_trfer_control;
     if(k==0 | k==4)
       begin
       `tenv_usbhost.trsac_in.ep=ep_intlvd;
-      `tenv_usbhost.trsac_in.data_size=packet_size;
+      `tenv_usbhost.trsac_in.pack_size=packet_size;
       `tenv_usbhost.trsac_in.buffer_ptr=i;
-      `tenv_usbhost.trsac_in.handshake=`tenv_usbhost.ACK;
+      `tenv_usbhost.trsac_in.mode=`tenv_usbhost.HSK_ACK;
       `tenv_usbhost.trsac_in;
       `tenv_usbhost.toggle_bit[ep_intlvd]=
                                     ~`tenv_usbhost.toggle_bit[ep_intlvd];
-      `tenv_usbhost.check_data(i,packet_size);
-      i=i+`tenv_usbhost.trsac_in.data_size;
+      check_data(i,packet_size);
+      i=i+`tenv_usbhost.trsac_in.pack_size;
       end
     //DATA STAGE
     `tenv_usbhost.gen_data(i,packet_size);
     `tenv_usbhost.trsac_out.ep=ep;
-    `tenv_usbhost.trsac_out.data_size=packet_size;
+    `tenv_usbhost.trsac_out.pack_size=packet_size;
     `tenv_usbhost.trsac_out.buffer_ptr=i;
-    `tenv_usbhost.trsac_out.handshake=`tenv_usbhost.ACK;
+    `tenv_usbhost.trsac_out.mode=`tenv_usbhost.HSK_ACK;
     `tenv_usbhost.trsac_out;
     `tenv_usbhost.toggle_bit[ep]=~`tenv_usbhost.toggle_bit[ep];
-    i=i+`tenv_usbhost.trsac_out.data_size;
+    i=i+`tenv_usbhost.trsac_out.pack_size;
     //INTERLEAVED TRANSACTION
     if(k==1 | k==4)
       begin
       `tenv_usbhost.trsac_in.ep=ep_intlvd;
-      `tenv_usbhost.trsac_in.data_size=packet_size;
+      `tenv_usbhost.trsac_in.pack_size=packet_size;
       `tenv_usbhost.trsac_in.buffer_ptr=i;
-      `tenv_usbhost.trsac_in.handshake=`tenv_usbhost.ACK;
+      `tenv_usbhost.trsac_in.mode=`tenv_usbhost.HSK_ACK;
       `tenv_usbhost.trsac_in;
       `tenv_usbhost.toggle_bit[ep_intlvd]=
                                     ~`tenv_usbhost.toggle_bit[ep_intlvd];
-      `tenv_usbhost.check_data(i,packet_size);
-      i=i+`tenv_usbhost.trsac_in.data_size;
+      check_data(i,packet_size);
+      i=i+`tenv_usbhost.trsac_in.pack_size;
       end
     `tenv_usbhost.gen_data(i,packet_size);
     `tenv_usbhost.trsac_out.ep=ep;
-    `tenv_usbhost.trsac_out.data_size=packet_size;
+    `tenv_usbhost.trsac_out.pack_size=packet_size;
     `tenv_usbhost.trsac_out.buffer_ptr=i;
-    `tenv_usbhost.trsac_out.handshake=`tenv_usbhost.ACK;
+    `tenv_usbhost.trsac_out.mode=`tenv_usbhost.HSK_ACK;
     `tenv_usbhost.trsac_out;
     `tenv_usbhost.toggle_bit[ep]=~`tenv_usbhost.toggle_bit[ep];
-    i=i+`tenv_usbhost.trsac_out.data_size;
+    i=i+`tenv_usbhost.trsac_out.pack_size;
     //INTERLEAVED TRANSACTION
     if(k==2 | k==4)
       begin
       `tenv_usbhost.trsac_in.ep=ep_intlvd;
-      `tenv_usbhost.trsac_in.data_size=packet_size;
+      `tenv_usbhost.trsac_in.pack_size=packet_size;
       `tenv_usbhost.trsac_in.buffer_ptr=i;
-      `tenv_usbhost.trsac_in.handshake=`tenv_usbhost.ACK;
+      `tenv_usbhost.trsac_in.mode=`tenv_usbhost.HSK_ACK;
       `tenv_usbhost.trsac_in;
       `tenv_usbhost.toggle_bit[ep_intlvd]=
                                     ~`tenv_usbhost.toggle_bit[ep_intlvd];
-      `tenv_usbhost.check_data(i,packet_size);
-      i=i+`tenv_usbhost.trsac_in.data_size;
-      end    
+      check_data(i,packet_size);
+      i=i+`tenv_usbhost.trsac_in.pack_size;
+      end
     //STATUS STAGE
     `tenv_usbhost.toggle_bit[ep]=1;
     `tenv_usbhost.trsac_in.ep=ep;
-    `tenv_usbhost.trsac_in.data_size=0;
+    `tenv_usbhost.trsac_in.pack_size=0;
     `tenv_usbhost.trsac_in.buffer_ptr=i;
-    `tenv_usbhost.trsac_in.handshake=`tenv_usbhost.ACK;
+    `tenv_usbhost.trsac_in.mode=`tenv_usbhost.HSK_ACK;
     `tenv_usbhost.trsac_in;
-    `tenv_usbhost.check_data(i,0);
-    i=i+`tenv_usbhost.trsac_in.data_size;
-    
+    check_data(i,0);
+    i=i+`tenv_usbhost.trsac_in.pack_size;
+
     k=k+1;
     end
-    
+
     begin
     //SETUP STAGE
     `tenv_usbdev.trsac_setup.ep=ep;
     `tenv_usbdev.trsac_setup.buffer_ptr=j;
     `tenv_usbdev.trsac_setup.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_setup;
-    `tenv_usbdev.check_data(j,8);
-    j=j+`tenv_usbdev.trsac_setup.data_size;
+    check_data(j,8);
+    j=j+`tenv_usbdev.trsac_setup.pack_size;
     //INTERLEAVED TRANSACTION
     if(k==0 | k==4)
       begin
       `tenv_usbdev.gen_data(j,packet_size);
       `tenv_usbdev.trsac_in.ep=ep_intlvd;
-      `tenv_usbdev.trsac_in.data_size=packet_size;
+      `tenv_usbdev.trsac_in.pack_size=packet_size;
       `tenv_usbdev.trsac_in.buffer_ptr=j;
       `tenv_usbdev.trsac_in.handshake=`tenv_usbdev.ACK;
       `tenv_usbdev.trsac_in;
-      j=j+`tenv_usbdev.trsac_in.data_size;
+      j=j+`tenv_usbdev.trsac_in.pack_size;
       end
     //DATA STAGE
     `tenv_usbdev.trsac_out.ep=ep;
-    `tenv_usbdev.trsac_out.data_size=packet_size;
+    `tenv_usbdev.trsac_out.pack_size=packet_size;
     `tenv_usbdev.trsac_out.buffer_ptr=j;
     `tenv_usbdev.trsac_out.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_out;
-    `tenv_usbdev.check_data(j,packet_size);
-    j=j+`tenv_usbdev.trsac_out.data_size;
+    check_data(j,packet_size);
+    j=j+`tenv_usbdev.trsac_out.pack_size;
     //INTERLEAVED TRANSACTION
     if(k==1 | k==4)
       begin
       `tenv_usbdev.gen_data(j,packet_size);
       `tenv_usbdev.trsac_in.ep=ep_intlvd;
-      `tenv_usbdev.trsac_in.data_size=packet_size;
+      `tenv_usbdev.trsac_in.pack_size=packet_size;
       `tenv_usbdev.trsac_in.buffer_ptr=j;
       `tenv_usbdev.trsac_in.handshake=`tenv_usbdev.ACK;
       `tenv_usbdev.trsac_in;
-      j=j+`tenv_usbdev.trsac_in.data_size;
+      j=j+`tenv_usbdev.trsac_in.pack_size;
       end
     `tenv_usbdev.trsac_out.ep=ep;
-    `tenv_usbdev.trsac_out.data_size=packet_size;
+    `tenv_usbdev.trsac_out.pack_size=packet_size;
     `tenv_usbdev.trsac_out.buffer_ptr=j;
     `tenv_usbdev.trsac_out.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_out;
-    `tenv_usbdev.check_data(j,packet_size);    
-    j=j+`tenv_usbdev.trsac_out.data_size;
+    check_data(j,packet_size);
+    j=j+`tenv_usbdev.trsac_out.pack_size;
     //INTERLEAVED TRANSACTION
     if(k==2 | k==4)
       begin
       `tenv_usbdev.gen_data(j,packet_size);
       `tenv_usbdev.trsac_in.ep=ep_intlvd;
-      `tenv_usbdev.trsac_in.data_size=packet_size;
+      `tenv_usbdev.trsac_in.pack_size=packet_size;
       `tenv_usbdev.trsac_in.buffer_ptr=j;
       `tenv_usbdev.trsac_in.handshake=`tenv_usbdev.ACK;
       `tenv_usbdev.trsac_in;
-      j=j+`tenv_usbdev.trsac_in.data_size;
+      j=j+`tenv_usbdev.trsac_in.pack_size;
       end
     //STATUS STAGE
     `tenv_usbdev.trsac_in.ep=ep;
-    `tenv_usbdev.trsac_in.data_size=0;
+    `tenv_usbdev.trsac_in.pack_size=0;
     `tenv_usbdev.trsac_in.buffer_ptr=j;
     `tenv_usbdev.trsac_in.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_in;
-    j=j+`tenv_usbdev.trsac_in.data_size;
+    j=j+`tenv_usbdev.trsac_in.pack_size;
     end
     join
 
@@ -835,9 +835,9 @@ task tcase_trfer_control;
     `tenv_usbhost.toggle_bit[ep]=0;
     `tenv_usbhost.gen_data(i,8);
     `tenv_usbhost.trsac_setup.ep=ep;
-    `tenv_usbhost.trsac_setup.data_size=8;
+    `tenv_usbhost.trsac_setup.pack_size=8;
     `tenv_usbhost.trsac_setup.buffer_ptr=i;
-    `tenv_usbhost.trsac_setup.handshake=`tenv_usbhost.ACK;
+    `tenv_usbhost.trsac_setup.mode=`tenv_usbhost.HSK_ACK;
     `tenv_usbhost.trsac_setup;
     `tenv_usbhost.toggle_bit[ep]=~`tenv_usbhost.toggle_bit[ep];
     i=i+8;
@@ -846,136 +846,136 @@ task tcase_trfer_control;
       begin
       `tenv_usbhost.gen_data(i,packet_size);
       `tenv_usbhost.trsac_out.ep=ep_intlvd;
-      `tenv_usbhost.trsac_out.data_size=packet_size;
+      `tenv_usbhost.trsac_out.pack_size=packet_size;
       `tenv_usbhost.trsac_out.buffer_ptr=i;
-      `tenv_usbhost.trsac_out.handshake=`tenv_usbhost.ACK;
+      `tenv_usbhost.trsac_out.mode=`tenv_usbhost.HSK_ACK;
       `tenv_usbhost.trsac_out;
       `tenv_usbhost.toggle_bit[ep_intlvd]=
                                     ~`tenv_usbhost.toggle_bit[ep_intlvd];
-      i=i+`tenv_usbhost.trsac_out.data_size;
+      i=i+`tenv_usbhost.trsac_out.pack_size;
       end
     //DATA STAGE
     `tenv_usbhost.gen_data(i,packet_size);
     `tenv_usbhost.trsac_out.ep=ep;
-    `tenv_usbhost.trsac_out.data_size=packet_size;
+    `tenv_usbhost.trsac_out.pack_size=packet_size;
     `tenv_usbhost.trsac_out.buffer_ptr=i;
-    `tenv_usbhost.trsac_out.handshake=`tenv_usbhost.ACK;
+    `tenv_usbhost.trsac_out.mode=`tenv_usbhost.HSK_ACK;
     `tenv_usbhost.trsac_out;
     `tenv_usbhost.toggle_bit[ep]=~`tenv_usbhost.toggle_bit[ep];
-    i=i+`tenv_usbhost.trsac_out.data_size;
+    i=i+`tenv_usbhost.trsac_out.pack_size;
     //INTERLEAVED TRANSACTION
     if(k==1 | k==4)
       begin
       `tenv_usbhost.gen_data(i,packet_size);
       `tenv_usbhost.trsac_out.ep=ep_intlvd;
-      `tenv_usbhost.trsac_out.data_size=packet_size;
+      `tenv_usbhost.trsac_out.pack_size=packet_size;
       `tenv_usbhost.trsac_out.buffer_ptr=i;
-      `tenv_usbhost.trsac_out.handshake=`tenv_usbhost.ACK;
+      `tenv_usbhost.trsac_out.mode=`tenv_usbhost.HSK_ACK;
       `tenv_usbhost.trsac_out;
       `tenv_usbhost.toggle_bit[ep_intlvd]=
                                     ~`tenv_usbhost.toggle_bit[ep_intlvd];
-      i=i+`tenv_usbhost.trsac_out.data_size;
+      i=i+`tenv_usbhost.trsac_out.pack_size;
       end
     `tenv_usbhost.gen_data(i,packet_size);
     `tenv_usbhost.trsac_out.ep=ep;
-    `tenv_usbhost.trsac_out.data_size=packet_size;
+    `tenv_usbhost.trsac_out.pack_size=packet_size;
     `tenv_usbhost.trsac_out.buffer_ptr=i;
-    `tenv_usbhost.trsac_out.handshake=`tenv_usbhost.ACK;
+    `tenv_usbhost.trsac_out.mode=`tenv_usbhost.HSK_ACK;
     `tenv_usbhost.trsac_out;
     `tenv_usbhost.toggle_bit[ep]=~`tenv_usbhost.toggle_bit[ep];
-    i=i+`tenv_usbhost.trsac_out.data_size;
+    i=i+`tenv_usbhost.trsac_out.pack_size;
     //INTERLEAVED TRANSACTION
     if(k==2 | k==4)
       begin
       `tenv_usbhost.gen_data(i,packet_size);
       `tenv_usbhost.trsac_out.ep=ep_intlvd;
-      `tenv_usbhost.trsac_out.data_size=packet_size;
+      `tenv_usbhost.trsac_out.pack_size=packet_size;
       `tenv_usbhost.trsac_out.buffer_ptr=i;
-      `tenv_usbhost.trsac_out.handshake=`tenv_usbhost.ACK;
+      `tenv_usbhost.trsac_out.mode=`tenv_usbhost.HSK_ACK;
       `tenv_usbhost.trsac_out;
       `tenv_usbhost.toggle_bit[ep_intlvd]=
                                     ~`tenv_usbhost.toggle_bit[ep_intlvd];
-      i=i+`tenv_usbhost.trsac_out.data_size;
-      end    
+      i=i+`tenv_usbhost.trsac_out.pack_size;
+      end
     //STATUS STAGE
     `tenv_usbhost.toggle_bit[ep]=1;
     `tenv_usbhost.trsac_in.ep=ep;
-    `tenv_usbhost.trsac_in.data_size=0;
+    `tenv_usbhost.trsac_in.pack_size=0;
     `tenv_usbhost.trsac_in.buffer_ptr=i;
-    `tenv_usbhost.trsac_in.handshake=`tenv_usbhost.ACK;
+    `tenv_usbhost.trsac_in.mode=`tenv_usbhost.HSK_ACK;
     `tenv_usbhost.trsac_in;
-    `tenv_usbhost.check_data(i,0);
-    i=i+`tenv_usbhost.trsac_in.data_size;
-    
+    check_data(i,0);
+    i=i+`tenv_usbhost.trsac_in.pack_size;
+
     k=k+1;
     end
-    
+
     begin
     //SETUP STAGE
     `tenv_usbdev.trsac_setup.ep=ep;
     `tenv_usbdev.trsac_setup.buffer_ptr=j;
     `tenv_usbdev.trsac_setup.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_setup;
-    `tenv_usbdev.check_data(j,8);
-    j=j+`tenv_usbdev.trsac_setup.data_size;
+    check_data(j,8);
+    j=j+`tenv_usbdev.trsac_setup.pack_size;
     //INTERLEAVED TRANSACTION
     if(k==0 | k==4)
       begin
       `tenv_usbdev.trsac_out.ep=ep_intlvd;
-      `tenv_usbdev.trsac_out.data_size=packet_size;
+      `tenv_usbdev.trsac_out.pack_size=packet_size;
       `tenv_usbdev.trsac_out.buffer_ptr=j;
       `tenv_usbdev.trsac_out.handshake=`tenv_usbdev.ACK;
       `tenv_usbdev.trsac_out;
-      `tenv_usbdev.check_data(j,packet_size);
-      j=j+`tenv_usbdev.trsac_out.data_size;
+      check_data(j,packet_size);
+      j=j+`tenv_usbdev.trsac_out.pack_size;
       end
     //DATA STAGE
     `tenv_usbdev.trsac_out.ep=ep;
-    `tenv_usbdev.trsac_out.data_size=packet_size;
+    `tenv_usbdev.trsac_out.pack_size=packet_size;
     `tenv_usbdev.trsac_out.buffer_ptr=j;
     `tenv_usbdev.trsac_out.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_out;
-    `tenv_usbdev.check_data(j,packet_size);
-    j=j+`tenv_usbdev.trsac_out.data_size;
+    check_data(j,packet_size);
+    j=j+`tenv_usbdev.trsac_out.pack_size;
     //INTERLEAVED TRANSACTION
     if(k==1 | k==4)
       begin
       `tenv_usbdev.trsac_out.ep=ep_intlvd;
-      `tenv_usbdev.trsac_out.data_size=packet_size;
+      `tenv_usbdev.trsac_out.pack_size=packet_size;
       `tenv_usbdev.trsac_out.buffer_ptr=j;
       `tenv_usbdev.trsac_out.handshake=`tenv_usbdev.ACK;
       `tenv_usbdev.trsac_out;
-      `tenv_usbdev.check_data(j,packet_size);
-      j=j+`tenv_usbdev.trsac_out.data_size;
+      check_data(j,packet_size);
+      j=j+`tenv_usbdev.trsac_out.pack_size;
       end
     `tenv_usbdev.trsac_out.ep=ep;
-    `tenv_usbdev.trsac_out.data_size=packet_size;
+    `tenv_usbdev.trsac_out.pack_size=packet_size;
     `tenv_usbdev.trsac_out.buffer_ptr=j;
     `tenv_usbdev.trsac_out.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_out;
-    `tenv_usbdev.check_data(j,packet_size);    
-    j=j+`tenv_usbdev.trsac_out.data_size;
+    check_data(j,packet_size);
+    j=j+`tenv_usbdev.trsac_out.pack_size;
     //INTERLEAVED TRANSACTION
     if(k==2 | k==4)
       begin
       `tenv_usbdev.trsac_out.ep=ep_intlvd;
-      `tenv_usbdev.trsac_out.data_size=packet_size;
+      `tenv_usbdev.trsac_out.pack_size=packet_size;
       `tenv_usbdev.trsac_out.buffer_ptr=j;
       `tenv_usbdev.trsac_out.handshake=`tenv_usbdev.ACK;
       `tenv_usbdev.trsac_out;
-      `tenv_usbdev.check_data(j,packet_size);
-      j=j+`tenv_usbdev.trsac_out.data_size;
+      check_data(j,packet_size);
+      j=j+`tenv_usbdev.trsac_out.pack_size;
       end
     //STATUS STAGE
     `tenv_usbdev.trsac_in.ep=ep;
-    `tenv_usbdev.trsac_in.data_size=0;
+    `tenv_usbdev.trsac_in.pack_size=0;
     `tenv_usbdev.trsac_in.buffer_ptr=j;
     `tenv_usbdev.trsac_in.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_in;
-    j=j+`tenv_usbdev.trsac_in.data_size;
+    j=j+`tenv_usbdev.trsac_in.pack_size;
     end
     join
-    
+
   //#7 CONTROL_OUT INTERRUPTED BY OTHER CONTROL
   ep=4'b0101;
   packet_size=2;
@@ -991,9 +991,9 @@ task tcase_trfer_control;
     `tenv_usbhost.toggle_bit[ep]=0;
     `tenv_usbhost.gen_data(i,8);
     `tenv_usbhost.trsac_setup.ep=ep;
-    `tenv_usbhost.trsac_setup.data_size=8;
+    `tenv_usbhost.trsac_setup.pack_size=8;
     `tenv_usbhost.trsac_setup.buffer_ptr=i;
-    `tenv_usbhost.trsac_setup.handshake=`tenv_usbhost.ACK;
+    `tenv_usbhost.trsac_setup.mode=`tenv_usbhost.HSK_ACK;
     `tenv_usbhost.trsac_setup;
     `tenv_usbhost.toggle_bit[ep]=~`tenv_usbhost.toggle_bit[ep];
     i=i+8;
@@ -1003,9 +1003,9 @@ task tcase_trfer_control;
       `tenv_usbhost.toggle_bit[ep]=0;
       `tenv_usbhost.gen_data(i,8);
       `tenv_usbhost.trsac_setup.ep=ep;
-      `tenv_usbhost.trsac_setup.data_size=8;
+      `tenv_usbhost.trsac_setup.pack_size=8;
       `tenv_usbhost.trsac_setup.buffer_ptr=i;
-      `tenv_usbhost.trsac_setup.handshake=`tenv_usbhost.ACK;
+      `tenv_usbhost.trsac_setup.mode=`tenv_usbhost.HSK_ACK;
       `tenv_usbhost.trsac_setup;
       `tenv_usbhost.toggle_bit[ep]=~`tenv_usbhost.toggle_bit[ep];
       i=i+8;
@@ -1013,65 +1013,65 @@ task tcase_trfer_control;
     //DATA STAGE
     `tenv_usbhost.gen_data(i,packet_size);
     `tenv_usbhost.trsac_out.ep=ep;
-    `tenv_usbhost.trsac_out.data_size=packet_size;
+    `tenv_usbhost.trsac_out.pack_size=packet_size;
     `tenv_usbhost.trsac_out.buffer_ptr=i;
-    `tenv_usbhost.trsac_out.handshake=`tenv_usbhost.ACK;
+    `tenv_usbhost.trsac_out.mode=`tenv_usbhost.HSK_ACK;
     `tenv_usbhost.trsac_out;
     `tenv_usbhost.toggle_bit[ep]=~`tenv_usbhost.toggle_bit[ep];
-    i=i+`tenv_usbhost.trsac_out.data_size;
+    i=i+`tenv_usbhost.trsac_out.pack_size;
     if(k==1)
       begin
       //SETUP STAGE
       `tenv_usbhost.toggle_bit[ep]=0;
       `tenv_usbhost.gen_data(i,8);
       `tenv_usbhost.trsac_setup.ep=ep;
-      `tenv_usbhost.trsac_setup.data_size=8;
+      `tenv_usbhost.trsac_setup.pack_size=8;
       `tenv_usbhost.trsac_setup.buffer_ptr=i;
-      `tenv_usbhost.trsac_setup.handshake=`tenv_usbhost.ACK;
+      `tenv_usbhost.trsac_setup.mode=`tenv_usbhost.HSK_ACK;
       `tenv_usbhost.trsac_setup;
       `tenv_usbhost.toggle_bit[ep]=~`tenv_usbhost.toggle_bit[ep];
       i=i+8;
       end
     `tenv_usbhost.gen_data(i,packet_size);
     `tenv_usbhost.trsac_out.ep=ep;
-    `tenv_usbhost.trsac_out.data_size=packet_size;
+    `tenv_usbhost.trsac_out.pack_size=packet_size;
     `tenv_usbhost.trsac_out.buffer_ptr=i;
-    `tenv_usbhost.trsac_out.handshake=`tenv_usbhost.ACK;
+    `tenv_usbhost.trsac_out.mode=`tenv_usbhost.HSK_ACK;
     `tenv_usbhost.trsac_out;
     `tenv_usbhost.toggle_bit[ep]=~`tenv_usbhost.toggle_bit[ep];
-    i=i+`tenv_usbhost.trsac_out.data_size;
+    i=i+`tenv_usbhost.trsac_out.pack_size;
     if(k==2)
       begin
       //SETUP STAGE
       `tenv_usbhost.toggle_bit[ep]=0;
       `tenv_usbhost.gen_data(i,8);
       `tenv_usbhost.trsac_setup.ep=ep;
-      `tenv_usbhost.trsac_setup.data_size=8;
+      `tenv_usbhost.trsac_setup.pack_size=8;
       `tenv_usbhost.trsac_setup.buffer_ptr=i;
-      `tenv_usbhost.trsac_setup.handshake=`tenv_usbhost.ACK;
+      `tenv_usbhost.trsac_setup.mode=`tenv_usbhost.HSK_ACK;
       `tenv_usbhost.trsac_setup;
       `tenv_usbhost.toggle_bit[ep]=~`tenv_usbhost.toggle_bit[ep];
       i=i+8;
-      end    
+      end
     //STATUS STAGE
     `tenv_usbhost.toggle_bit[ep]=1;
     `tenv_usbhost.trsac_in.ep=ep;
-    `tenv_usbhost.trsac_in.data_size=0;
+    `tenv_usbhost.trsac_in.pack_size=0;
     `tenv_usbhost.trsac_in.buffer_ptr=i;
-    `tenv_usbhost.trsac_in.handshake=`tenv_usbhost.ACK;
+    `tenv_usbhost.trsac_in.mode=`tenv_usbhost.HSK_ACK;
     `tenv_usbhost.trsac_in;
-    `tenv_usbhost.check_data(i,0);
-    i=i+`tenv_usbhost.trsac_in.data_size;
+    check_data(i,0);
+    i=i+`tenv_usbhost.trsac_in.pack_size;
     k=k+1;
     end
-    
+
     begin
     //SETUP STAGE
     `tenv_usbdev.trsac_setup.ep=ep;
     `tenv_usbdev.trsac_setup.buffer_ptr=j;
     `tenv_usbdev.trsac_setup.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_setup;
-    `tenv_usbdev.check_data(j,8);
+    check_data(j,8);
     j=j+8;
     if(k==0)
       begin
@@ -1080,17 +1080,17 @@ task tcase_trfer_control;
       `tenv_usbdev.trsac_setup.buffer_ptr=j;
       `tenv_usbdev.trsac_setup.handshake=`tenv_usbdev.ACK;
       `tenv_usbdev.trsac_setup;
-      `tenv_usbdev.check_data(j,8);
-      j=j+`tenv_usbdev.trsac_setup.data_size;
+      check_data(j,8);
+      j=j+`tenv_usbdev.trsac_setup.pack_size;
       end
     //DATA STAGE
     `tenv_usbdev.trsac_out.ep=ep;
-    `tenv_usbdev.trsac_out.data_size=packet_size;
+    `tenv_usbdev.trsac_out.pack_size=packet_size;
     `tenv_usbdev.trsac_out.buffer_ptr=j;
     `tenv_usbdev.trsac_out.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_out;
-    `tenv_usbdev.check_data(j,packet_size);
-    j=j+`tenv_usbdev.trsac_out.data_size;
+    check_data(j,packet_size);
+    j=j+`tenv_usbdev.trsac_out.pack_size;
     if(k==1)
       begin
       //SETUP STAGE
@@ -1098,16 +1098,16 @@ task tcase_trfer_control;
       `tenv_usbdev.trsac_setup.buffer_ptr=j;
       `tenv_usbdev.trsac_setup.handshake=`tenv_usbdev.ACK;
       `tenv_usbdev.trsac_setup;
-      `tenv_usbdev.check_data(j,8);
+      check_data(j,8);
       j=j+8;
-      end    
+      end
     `tenv_usbdev.trsac_out.ep=ep;
-    `tenv_usbdev.trsac_out.data_size=packet_size;
+    `tenv_usbdev.trsac_out.pack_size=packet_size;
     `tenv_usbdev.trsac_out.buffer_ptr=j;
     `tenv_usbdev.trsac_out.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_out;
-    `tenv_usbdev.check_data(j,packet_size);    
-    j=j+`tenv_usbdev.trsac_out.data_size;
+    check_data(j,packet_size);
+    j=j+`tenv_usbdev.trsac_out.pack_size;
     if(k==2)
       begin
       //SETUP STAGE
@@ -1115,16 +1115,16 @@ task tcase_trfer_control;
       `tenv_usbdev.trsac_setup.buffer_ptr=j;
       `tenv_usbdev.trsac_setup.handshake=`tenv_usbdev.ACK;
       `tenv_usbdev.trsac_setup;
-      `tenv_usbdev.check_data(j,8);
+      check_data(j,8);
       j=j+8;
-      end    
+      end
     //STATUS STAGE
     `tenv_usbdev.trsac_in.ep=ep;
-    `tenv_usbdev.trsac_in.data_size=0;
+    `tenv_usbdev.trsac_in.pack_size=0;
     `tenv_usbdev.trsac_in.buffer_ptr=j;
     `tenv_usbdev.trsac_in.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_in;
-    j=j+`tenv_usbdev.trsac_in.data_size;
+    j=j+`tenv_usbdev.trsac_in.pack_size;
     end
     join
 
@@ -1144,74 +1144,74 @@ task tcase_trfer_control;
     `tenv_usbhost.toggle_bit[ep]=0;
     `tenv_usbhost.gen_data(i,8);
     `tenv_usbhost.trsac_setup.ep=ep;
-    `tenv_usbhost.trsac_setup.data_size=8;
+    `tenv_usbhost.trsac_setup.pack_size=8;
     `tenv_usbhost.trsac_setup.buffer_ptr=i;
-    `tenv_usbhost.trsac_setup.handshake=`tenv_usbhost.ACK;
+    `tenv_usbhost.trsac_setup.mode=`tenv_usbhost.HSK_ACK;
     `tenv_usbhost.trsac_setup;
     `tenv_usbhost.toggle_bit[ep]=~`tenv_usbhost.toggle_bit[ep];
     i=i+8;
     //STATUS STAGE
     `tenv_usbhost.toggle_bit[ep]=1;
     `tenv_usbhost.trsac_in.ep=ep;
-    `tenv_usbhost.trsac_in.data_size=0;
+    `tenv_usbhost.trsac_in.pack_size=0;
     `tenv_usbhost.trsac_in.buffer_ptr=i;
-    `tenv_usbhost.trsac_in.handshake=`tenv_usbhost.HSKERR;
+    `tenv_usbhost.trsac_in.mode=`tenv_usbhost.HSK_ERR;
     `tenv_usbhost.trsac_in;
-    `tenv_usbhost.check_data(i,0);
-    i=i+`tenv_usbhost.trsac_in.data_size;
+    check_data(i,0);
+    i=i+`tenv_usbhost.trsac_in.pack_size;
     //STATUS STAGE
     `tenv_usbhost.toggle_bit[ep]=1;
     `tenv_usbhost.trsac_in.ep=ep;
-    `tenv_usbhost.trsac_in.data_size=0;
+    `tenv_usbhost.trsac_in.pack_size=0;
     `tenv_usbhost.trsac_in.buffer_ptr=i;
-    `tenv_usbhost.trsac_in.handshake=`tenv_usbhost.HSKERR;
+    `tenv_usbhost.trsac_in.mode=`tenv_usbhost.HSK_ERR;
     `tenv_usbhost.trsac_in;
-    `tenv_usbhost.check_data(i,0);
-    i=i+`tenv_usbhost.trsac_in.data_size;
+    check_data(i,0);
+    i=i+`tenv_usbhost.trsac_in.pack_size;
     //STATUS STAGE
     `tenv_usbhost.toggle_bit[ep]=1;
     `tenv_usbhost.trsac_in.ep=ep;
-    `tenv_usbhost.trsac_in.data_size=0;
+    `tenv_usbhost.trsac_in.pack_size=0;
     `tenv_usbhost.trsac_in.buffer_ptr=i;
-    `tenv_usbhost.trsac_in.handshake=`tenv_usbhost.ACK;
+    `tenv_usbhost.trsac_in.mode=`tenv_usbhost.HSK_ACK;
     `tenv_usbhost.trsac_in;
-    `tenv_usbhost.check_data(i,0);
-    i=i+`tenv_usbhost.trsac_in.data_size;
+    check_data(i,0);
+    i=i+`tenv_usbhost.trsac_in.pack_size;
     k=k+1;
     end
-    
+
     begin
     //SETUP STAGE
     `tenv_usbdev.trsac_setup.ep=ep;
     `tenv_usbdev.trsac_setup.buffer_ptr=j;
     `tenv_usbdev.trsac_setup.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_setup;
-    `tenv_usbdev.check_data(j,8);
+    check_data(j,8);
     j=j+8;
     //STATUS STAGE
     `tenv_usbdev.trsac_in.ep=ep;
-    `tenv_usbdev.trsac_in.data_size=0;
+    `tenv_usbdev.trsac_in.pack_size=0;
     `tenv_usbdev.trsac_in.buffer_ptr=j;
     `tenv_usbdev.trsac_in.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_in.status=`tenv_usbdev.REQ_FAIL;
     `tenv_usbdev.trsac_in;
-    j=j+`tenv_usbdev.trsac_in.data_size;
+    j=j+`tenv_usbdev.trsac_in.pack_size;
     //STATUS STAGE
     `tenv_usbdev.trsac_in.ep=ep;
-    `tenv_usbdev.trsac_in.data_size=0;
+    `tenv_usbdev.trsac_in.pack_size=0;
     `tenv_usbdev.trsac_in.buffer_ptr=j;
     `tenv_usbdev.trsac_in.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_in.status=`tenv_usbdev.REQ_FAIL;
     `tenv_usbdev.trsac_in;
-    j=j+`tenv_usbdev.trsac_in.data_size;
+    j=j+`tenv_usbdev.trsac_in.pack_size;
     //STATUS STAGE
     `tenv_usbdev.trsac_in.ep=ep;
-    `tenv_usbdev.trsac_in.data_size=0;
+    `tenv_usbdev.trsac_in.pack_size=0;
     `tenv_usbdev.trsac_in.buffer_ptr=j;
     `tenv_usbdev.trsac_in.handshake=`tenv_usbdev.ACK;
     `tenv_usbdev.trsac_in.status=`tenv_usbdev.REQ_OK;
     `tenv_usbdev.trsac_in;
-    j=j+`tenv_usbdev.trsac_in.data_size;    
+    j=j+`tenv_usbdev.trsac_in.pack_size;
     end
     join
   end

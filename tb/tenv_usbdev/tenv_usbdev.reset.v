@@ -2,7 +2,7 @@
 task reset(input mode);
   //LOCAL
   localparam    block_name="tenv_usbdev/reset";
-  
+
   begin
   $write("%0t [%0s]: ",$realtime,block_name);
   if(mode)

@@ -2,14 +2,14 @@
 task trsac_in;
   //IFACE
   reg[3:0]    ep;
-  integer     data_size;
+  integer     pack_size;
   integer     buffer_ptr;
   integer     handshake;
   reg[1:0]    status;
-  //LOCAL   
+  //LOCAL
   parameter   block_name="tenv_usbdev/trsac_in";
   integer     i;
-  
+
   begin
   //BEGIN
   while(!(trsac_req==REQ_ACTIVE & trsac_type==TYPE_IN & trsac_ep==ep))
@@ -19,14 +19,14 @@ task trsac_in;
     trsac_reply=STALL;
     @(posedge `tenv_clock.x4);
     end
-  
+
   if(handshake==ACK)
     begin
     trsac_reply=ACK;
     //WRITE DATA
     i=0;
     @(posedge `tenv_clock.x4);
-    while(trsac_req==REQ_ACTIVE & i<data_size)
+    while(trsac_req==REQ_ACTIVE & i<pack_size)
       begin
       if(!tfifo_full)
         begin
@@ -54,6 +54,6 @@ task trsac_in;
 
   //ENDOK
   while(~(trsac_req==status & trsac_type==TYPE_IN & trsac_ep==ep))
-    @(posedge `tenv_clock.x4);  
+    @(posedge `tenv_clock.x4);
   end
 endtask

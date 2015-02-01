@@ -1,13 +1,12 @@
 
-task check_data (  
-                input integer buffer_ptr,
-                input integer size
+task check_data (
+                input integer     buffer_ptr,
+                input integer     size
                 );
-
   //LOCAL
-  parameter     block_name="tenv_usbdev/check_data";
+  parameter     block_name="tenv_test/check_data";
   integer       i;
-  
+
   begin
   i=buffer_ptr;
   repeat(size)
@@ -23,3 +22,4 @@ task check_data (
     end
   end
 endtask
+

@@ -2,13 +2,13 @@
 task trsac_setup;
   //IFACE
   reg[3:0]    ep;
-  integer     data_size;
+  integer     pack_size;
   integer     buffer_ptr;
   integer     handshake;
-  //LOCAL   
+  //LOCAL
   parameter   block_name="tenv_usbdev/trsac_setup";
   integer     i;
-  
+
   begin
   //BEGIN
   while(!(trsac_req==REQ_ACTIVE & trsac_type==TYPE_SETUP & trsac_ep==ep))
@@ -46,16 +46,16 @@ task trsac_setup;
       @(posedge `tenv_clock.x4);
       end
     end
-  if(i!==data_size)
+  if(i!==pack_size)
     begin
     $write("\n");
     $write("%0t [%0s]: ",$realtime,block_name);
     $display("Error - invalid bytes quantity",i);
-    $finish;    
+    $finish;
     end
   rfifo_rd=0;
 
-  //ENDOK  
+  //ENDOK
   while(~(trsac_req==REQ_OK & trsac_type==TYPE_SETUP & trsac_ep==ep))
     @(posedge `tenv_clock.x4);
   end

@@ -6,12 +6,12 @@ task gen_data (
   //LOCAL
   parameter   block_name="tenv_usbdev/gen_data";
   integer     i;
-  
+
   begin
   i=0;
   repeat(size)
     begin
-    `tenv_usbdev.buffer[buffer_ptr+i]=$random;
+    buffer[buffer_ptr+i]=$random;
     i=i+1;
     end
   end

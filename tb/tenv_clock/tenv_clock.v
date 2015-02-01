@@ -22,9 +22,9 @@ module tenv_clock;
     $write  ("Launch clocks. ");
     $write  ("Period of x4=%0d ns.\n",x4_period);
     end
-  
+
   tenv_clockgen   #(.clocks_number(1))
-     i_clockgen    (  
+     i_clockgen    (
                    .init(x4_init),
                    .en(x4_en ),
                    .time_high(x4_timehigh),

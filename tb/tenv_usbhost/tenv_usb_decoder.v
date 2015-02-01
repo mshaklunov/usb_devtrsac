@@ -1,39 +1,39 @@
 
-module tenv_usb_decoder;
+module tenv_usb_decoder           #(parameter PACKET_MAXSIZE=64);
   //IFACE
-  wire                dplus;
-  wire                dminus;
-      
-  reg                 start=0;
-  integer             mode=0;
-  localparam          MODE_PACKET=0,
-                      MODE_NOREPLY=1,
-                      MODE_WAKEUP=2;
-  reg                 speed;
-  reg[7:0]            pid=0;
-  reg[(64*8)+15:0]    data=0;
-  integer             data_size=0;  
-  integer             bit_time=10;
-    
-  localparam          PIDOUT=8'b1110_0001;
-  localparam          PIDIN=8'b0110_1001;
-  localparam          PIDSOF=8'b1010_0101;
-  localparam          PIDSETUP=8'b0010_110;
-  localparam          PIDDATA0=8'b1100_0011;
-  localparam          PIDDATA1=8'b0100_1011;
-  localparam          PIDACK=8'b1101_0010;
-  localparam          PIDNAK=8'b0101_1010;
-  localparam          PIDSTALL=8'b0001_1110;
-  localparam          PIDPRE=8'b0011_1100;
-    
-  //LOCAL   
-  localparam          block_name="tenv_usb_decoder";
-  integer             loop;
-  reg[15:0]           crc;
-  reg[7:0]            sync=8'b10000000;
-  reg                 dplus_prev=1;
-  integer             count_ones=0;
-  integer             i=0,j=0;
+  wire                            dplus;
+  wire                            dminus;
+            
+  reg                             start=0;
+  integer                         mode=0;
+  localparam                      MODE_PACKET=0,
+                                  MODE_NOREPLY=1,
+                                  MODE_WAKEUP=2;
+  reg                             speed=1;
+  reg[7:0]                        pid=0;
+  reg[(PACKET_MAXSIZE*8)+15:0]    data=0;
+  integer                         pack_size=0;
+  integer                         bit_time=10;
+            
+  localparam                      PIDOUT=8'b1110_0001;
+  localparam                      PIDIN=8'b0110_1001;
+  localparam                      PIDSOF=8'b1010_0101;
+  localparam                      PIDSETUP=8'b0010_110;
+  localparam                      PIDDATA0=8'b1100_0011;
+  localparam                      PIDDATA1=8'b0100_1011;
+  localparam                      PIDACK=8'b1101_0010;
+  localparam                      PIDNAK=8'b0101_1010;
+  localparam                      PIDSTALL=8'b0001_1110;
+  localparam                      PIDPRE=8'b0011_1100;
+
+  //LOCAL
+  localparam                      block_name="tenv_usb_decoder";
+  integer                         loop;
+  reg[15:0]                       crc;
+  reg[7:0]                        sync=8'b10000000;
+  reg                             dplus_prev=1;
+  integer                         count_ones=0;
+  integer                         i=0,j=0;
 
   initial forever
     begin
@@ -47,11 +47,11 @@ module tenv_usb_decoder;
       $finish;
       end
     dplus_prev= dplus;
-    
+
     if(mode==MODE_PACKET)
       fork
       //INTERPACKET DELAY: required < 6.5 BIT TIME
-      //                   checked < 4 BIT TIME            
+      //                   checked < 4 BIT TIME
       begin:TIMEOUT
       j=0;
       while(dplus_prev==dplus)
@@ -63,16 +63,16 @@ module tenv_usb_decoder;
           $write("\n");
           $write("%0t [%0s]: ",$realtime,block_name);
           $display("Error - timeout.");
-          $finish;        
+          $finish;
           end
         end
       end
-      
+
       begin:DECODE
       wait(dplus!==dplus_prev);
       disable TIMEOUT;
-      
-      //SYNC    
+
+      //SYNC
       #(bit_time/4);
       i=0;
       repeat(8)
@@ -124,7 +124,7 @@ module tenv_usb_decoder;
         $display("Error - invalid PID.");
         $finish;
         end
-       
+
       //DATA
       i=0;
       while((dplus!==0 | dminus!==0))
@@ -151,11 +151,11 @@ module tenv_usb_decoder;
           $write("%0t [%0s]: ",$realtime,block_name);
           $display("Error - invalid diff lines state.");
           $finish;
-          end  
+          end
         dplus_prev=dplus;
         #bit_time;
         end
-      
+
       //EOP
       #bit_time;
       if(dplus!==0 | dminus!==0)
@@ -175,7 +175,7 @@ module tenv_usb_decoder;
         $finish;
         end
       #bit_time;
-      
+
       //CRC
       crc=16'hffff;
       if(pid==PIDDATA0 | pid==PIDDATA1)
@@ -206,7 +206,7 @@ module tenv_usb_decoder;
                       {crc[3:0],1'b0};
           j= j+1;
           end
-        i= i-5;  
+        i= i-5;
         if(crc!==5'b01100)
           begin
           $write("\n");
@@ -215,7 +215,7 @@ module tenv_usb_decoder;
           $finish;
           end
         end
-      
+
       //CHECK BYTES QUANTITY
       if(i[2:0]!==0)
         begin
@@ -224,14 +224,14 @@ module tenv_usb_decoder;
         $display("Error - invalid quantity of bytes.");
         $finish;
         end
-      data_size=i;
+      pack_size=i;
       end
-      
+
       join
     else if(mode==MODE_WAKEUP)
       begin
       //WAKEUP: required 1-15ms
-      //        checked 1-5ms  
+      //        checked 1-5ms
       j=0;
       while({dplus,dminus}!=={~speed,speed})
         begin
@@ -242,7 +242,7 @@ module tenv_usb_decoder;
           $write("\n");
           $write("%0t [%0s]: ",$realtime,block_name);
           $display("Error - timeout.");
-          $finish;     
+          $finish;
           end
         end
       j=0;
@@ -255,7 +255,7 @@ module tenv_usb_decoder;
           $write("\n");
           $write("%0t [%0s]: ",$realtime,block_name);
           $display("Error - invalid wakeup.");
-          $finish;     
+          $finish;
           end
         end
       if(j<1000)
@@ -263,7 +263,7 @@ module tenv_usb_decoder;
         $write("\n");
         $write("%0t [%0s]: ",$realtime,block_name);
         $display("Error - invalid wakeup.");
-        $finish;     
+        $finish;
         end
       end
     else if(mode==MODE_NOREPLY)
@@ -282,9 +282,8 @@ module tenv_usb_decoder;
         $finish;
         end
       end
-    
+
     start=0;
     end
-   
+
 endmodule
-  

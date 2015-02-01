@@ -10,12 +10,12 @@ task reqstd_getdesc;
   reg[7:0]      index;
   reg[15:0]     langid;
   reg[7:0]      length;
-  integer       status;
+  integer       mode;
   integer       packet_size;
-  //LOCAL   
+  //LOCAL
   localparam    block_name="tenv_usbhost/reqstd_getdesc";
   integer       i;
-  
+
   begin
   $write("%0t [%0s]: ",$realtime,block_name);
   $display("GetDescriptor(%0s)",
@@ -23,8 +23,8 @@ task reqstd_getdesc;
           type==CONFIG ? "config" :
           "string");
   //CREATE REQUEST
-  bm_request_type=8'b0000_0001;
-  b_request=8'h06;
+  bm_request_type=8'b1000_0000;
+  b_request=GET_DESCRIPTOR;
   w_value={type,index};//TYPE, INDEX
   w_index=langid;//LANG ID
   w_length=length;//BYTES TO RETURN
@@ -38,25 +38,7 @@ task reqstd_getdesc;
   trfer_control_in.ep=0;
   trfer_control_in.data_size=length;
   trfer_control_in.packet_size=packet_size;
-  trfer_control_in.status=status;
+  trfer_control_in.mode=mode;
   trfer_control_in;
-  //CHECK RCV DATA
-  if(status==ACK)
-    begin
-    i=0;
-    repeat(length)
-      begin
-      if(buffer[i]!==`tenv_descstd_device.data_bybyte[i])
-        begin
-        $write("\n");
-        $write("%0t [%0s]: ",$realtime,block_name);
-        $display("Error - received invalid descriptor:");
-        $display("buffer=%0h vs desc=%0h ",
-                buffer[i],`tenv_descstd_device.data_bybyte[i]);
-        $finish;
-        end
-      i=i+1;
-      end
-    end
   end
 endtask

@@ -4,19 +4,20 @@ task reqstd_setiface;
 //DECLARATION
   //IFACE
   reg[7:0]  iface_value;
+  integer   mode;
 
   //LOCAL
   parameter block_name="tenv_usbhost/reqstd_setiface";
   integer   i;
-  
+
 //FUNCTION
   begin
   bm_request_type=8'b0000_0000;
-  b_request=8'h09;
+  b_request=SET_INTERFACE;
   w_value={8'd0,iface_value};
   w_index=0;
   w_length=0;
-  
+
   i=0;
   repeat(8)
     begin
@@ -29,7 +30,7 @@ task reqstd_setiface;
     i=i+1;
     end
   repeat(16)
-    begin  
+    begin
     buffer[i]=w_value[i%16];
     i=i+1;
     end
@@ -49,7 +50,7 @@ task reqstd_setiface;
   trfer_control_out.ep=0;
   trfer_control_out.data_size=0;
   trfer_control_out.packet_size=64;
-  trfer_control_out.status=ACK;
+  trfer_control_out.mode=mode;
   trfer_control_out;
   end
 endtask
